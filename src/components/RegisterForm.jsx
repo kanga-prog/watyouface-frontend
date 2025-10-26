@@ -15,20 +15,23 @@ function RegisterForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const response = await fetch("http://localhost:8080/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...formData, acceptTerms: false }),
-    });
+    try {
+      const response = await fetch("http://localhost:8080/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...formData, acceptTerms: false }),
+      });
 
-    const message = await response.text();
-    if (response.ok) {
-      // Simule l’enregistrement utilisateur temporaire
-      // (dans ton backend, tu pourras lui créer un compte "en attente d’acceptation")
-      localStorage.setItem("userId", Date.now()); // temporaire pour la démo
-      navigate("/contract");
-    } else {
-      alert(message);
+      const data = await response.json();
+      if (response.ok) {
+        // ✅ Stocke le vrai userId retourné par le backend
+        localStorage.setItem("userId", data.userId);
+        navigate("/contract");
+      } else {
+        alert(data);
+      }
+    } catch (err) {
+      alert("Erreur réseau ou serveur : " + err.message);
     }
   };
 
@@ -41,6 +44,7 @@ function RegisterForm() {
         value={formData.username}
         onChange={handleChange}
         className="w-full mb-3 p-2 border rounded"
+        required
       />
       <input
         name="email"
@@ -48,6 +52,7 @@ function RegisterForm() {
         value={formData.email}
         onChange={handleChange}
         className="w-full mb-3 p-2 border rounded"
+        required
       />
       <input
         name="password"
@@ -56,6 +61,7 @@ function RegisterForm() {
         value={formData.password}
         onChange={handleChange}
         className="w-full mb-3 p-2 border rounded"
+        required
       />
       <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
         S'inscrire
