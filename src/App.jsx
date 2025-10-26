@@ -5,6 +5,7 @@ import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
+import Contract from "./pages/Contract";
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<NotFound />} />
+           <Route path="/contract" element={<Contract />} />
         </Routes>
       </div>
     </Router>
