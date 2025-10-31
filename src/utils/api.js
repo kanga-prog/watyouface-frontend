@@ -21,8 +21,23 @@ export const api = {
       body: JSON.stringify(credentials),
     }),
 
+  register: (userData) =>
+    fetch(`${API_BASE}/api/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(userData),
+    }),
+
+  acceptContract: (userEmail) =>
+    fetch(`${API_BASE}/api/auth/accept-contract`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: userEmail }),
+    }),
+
   // 🔹 POSTS
   getPosts: () => fetch(`${API_BASE}/api/posts`, { headers: api.authHeader() }),
+
   createPost: (formData) =>
     fetch(`${API_BASE}/api/posts`, {
       method: "POST",
@@ -40,7 +55,10 @@ export const api = {
 
   // 🔹 COMMENTS
   getComments: (postId) =>
-    fetch(`${API_BASE}/api/comments/post/${postId}`, { headers: api.authHeader() }),
+    fetch(`${API_BASE}/api/comments/post/${postId}`, {
+      headers: api.authHeader(),
+    }),
+
   addComment: (postId, content) =>
     fetch(`${API_BASE}/api/comments`, {
       method: "POST",

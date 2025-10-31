@@ -16,7 +16,8 @@ export default function Profile() {
       return;
     }
 
-    fetch("http://localhost:8080/api/user/me", {
+    // ✅ Utilise l'IP WSL2
+    fetch("http://172.28.24.211:8080/api/user/me", {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {
@@ -30,7 +31,8 @@ export default function Profile() {
   useEffect(() => {
     if (!user) return;
 
-    fetch("http://localhost:8080/api/contracts/active")
+    // ✅ Utilise l'IP WSL2
+    fetch("http://172.28.24.211:8080/api/contracts/active")
       .then((res) => {
         if (!res.ok) throw new Error("Pas de contrat actif");
         return res.json();
@@ -50,12 +52,13 @@ export default function Profile() {
     setDownloading(true);
     const token = localStorage.getItem("token");
     try {
-      const response = await fetch(`http://localhost:8080/api/contracts/${activeContractId}/download`, {
+      // ✅ Utilise l'IP WSL2
+      const response = await fetch(`http://172.28.24.211:8080/api/contracts/${activeContractId}/download`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!response.ok) {
-        alert("Erreur lors du téléchargement. Veuillez réessayer.");
+        alert("Erreur lors du téléchargement.");
         return;
       }
 
@@ -78,7 +81,7 @@ export default function Profile() {
 
   if (!user) return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <p className="text-gray-500">Chargement de votre profil...</p>
+      <p className="text-gray-500">Chargement...</p>
     </div>
   );
 
@@ -121,36 +124,22 @@ export default function Profile() {
           ) : activeContractId ? (
             <div className="space-y-4">
               <p className="text-gray-700">
-                Vous avez accepté le contrat général de WatYouFace. Vous pouvez le télécharger à tout moment.
+                Vous avez accepté le contrat général de WatYouFace.
               </p>
               <button
                 onClick={handleDownloadContract}
                 disabled={downloading}
                 className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
                   downloading ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'
-                } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                }`}
               >
-                {downloading ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Préparation...
-                  </>
-                ) : (
-                  '📄 Télécharger le PDF'
-                )}
+                {downloading ? 'Préparation...' : '📄 Télécharger le PDF'}
               </button>
             </div>
           ) : (
-            <p className="text-red-600">Aucun contrat actif n’est disponible pour le moment.</p>
+            <p className="text-red-600">Aucun contrat actif.</p>
           )}
         </div>
-
-        <p className="mt-6 text-center text-sm text-gray-500">
-          Ce document a valeur légale et contient vos engagements sur la plateforme.
-        </p>
       </div>
     </div>
   );

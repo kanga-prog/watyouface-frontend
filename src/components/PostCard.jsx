@@ -37,7 +37,7 @@ export default function PostCard({ post }) {
   // Fonction utilitaire pour construire l'URL complète
   const buildMediaUrl = (path) => {
     if (!path) return null;
-    return path.startsWith("http") ? path : `http://localhost:8080${path}`;
+    return path.startsWith("http") ? path : `http://172.28.24.211:8080${path}`;
   };
 
   const imageUrl = buildMediaUrl(post.imageUrl);
