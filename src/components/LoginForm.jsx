@@ -1,42 +1,35 @@
+// src/components/LoginForm.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { api } from "../utils/api"; // ✅ Importe api
 
 export default function LoginForm() {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:8080/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(formData),
-      });
+      // ✅ Utilise api.login()
+      const res = await api.login(formData);
 
       if (!res.ok) {
         const text = await res.text();
         throw new Error(text);
       }
 
-      const token = await res.text(); // Ton backend renvoie un simple String
-      localStorage.setItem("token", token); // Stocker le token pour les futures requêtes
+      const token = await res.text();
+      localStorage.setItem("token", token);
       setMessage("✅ Connexion réussie !");
-      navigate("/profile"); // Redirige vers la page profil
+      navigate("/");
     } catch (err) {
+      console.error("Erreur lors du login :", err);
       setMessage("❌ " + err.message);
     }
   };

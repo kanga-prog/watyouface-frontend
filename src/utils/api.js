@@ -1,26 +1,32 @@
 // src/utils/api.js
-const API_BASE = "http://localhost:8080";
+const API_BASE = "http://172.28.24.211:8080";
 
 export const api = {
   getToken: () => localStorage.getItem("token"),
 
-  // Pour les requêtes JSON
   jsonHeaders: () => ({
     Authorization: `Bearer ${api.getToken()}`,
     "Content-Type": "application/json",
   }),
 
-  // Pour les requêtes multipart (upload)
   authHeader: () => ({
     Authorization: `Bearer ${api.getToken()}`,
   }),
+
+  // 🔹 AUTH
+  login: (credentials) =>
+    fetch(`${API_BASE}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(credentials),
+    }),
 
   // 🔹 POSTS
   getPosts: () => fetch(`${API_BASE}/api/posts`, { headers: api.authHeader() }),
   createPost: (formData) =>
     fetch(`${API_BASE}/api/posts`, {
       method: "POST",
-      headers: api.authHeader(), // Pas de Content-Type → multipart auto
+      headers: api.authHeader(),
       body: formData,
     }),
 
