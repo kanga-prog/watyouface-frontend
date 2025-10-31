@@ -1,4 +1,3 @@
-// src/pages/Contract.jsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -9,6 +8,7 @@ export default function Contract() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  // Charger le contrat actif au montage
   useEffect(() => {
     const fetchContract = async () => {
       try {
@@ -26,30 +26,31 @@ export default function Contract() {
     fetchContract();
   }, []);
 
+  // Accepter le contrat → enregistrer l'utilisateur
   const handleAccept = async () => {
-    const userId = localStorage.getItem("userId");
-    if (!userId || !contract) return;
+    const tempData = localStorage.getItem("tempUserData");
+    if (!tempData || !contract) {
+      navigate("/register");
+      return;
+    }
 
+    const userData = JSON.parse(tempData);
     setSubmitting(true);
     setError("");
 
     try {
-      const res = await fetch("http://172.28.24.211:8080/api/contracts/accept", {
+      const res = await fetch("http://172.28.24.211:8080/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: parseInt(userId),
-          contractId: contract.id,
-          accepted: true,
-        }),
+        body: JSON.stringify({ ...userData, acceptTerms: true }),
       });
 
       if (res.ok) {
-        localStorage.removeItem("userId"); // Nettoyage
-        navigate("/login", { state: { message: "✅ Votre compte est activé ! Connectez-vous." } });
+        localStorage.removeItem("tempUserData");
+        navigate("/login", { state: { message: "✅ Compte créé avec succès !" } });
       } else {
         const text = await res.text();
-        setError("Échec de l'acceptation : " + text);
+        setError("Échec de l'inscription : " + text);
       }
     } catch (err) {
       setError("Erreur réseau : " + err.message);
@@ -58,11 +59,13 @@ export default function Contract() {
     }
   };
 
+  // Refuser → retour à l'inscription
   const handleReject = () => {
-    localStorage.removeItem("userId");
+    localStorage.removeItem("tempUserData");
     navigate("/register");
   };
 
+  // État de chargement
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -74,6 +77,7 @@ export default function Contract() {
     );
   }
 
+  // Erreur de chargement
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -94,6 +98,7 @@ export default function Contract() {
     );
   }
 
+  // Affichage du contrat
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-12 px-4 sm:px-6">
       <div className="max-w-4xl mx-auto">
@@ -107,7 +112,7 @@ export default function Contract() {
           </p>
         </div>
 
-        {/* Contract Card */}
+        {/* Carte du contrat */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-10">
           <div className="bg-blue-600 px-6 py-4">
             <h2 className="text-xl font-bold text-white">
