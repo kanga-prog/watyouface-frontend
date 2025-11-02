@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { api } from "../utils/api";
 
-export default function LikeButton({ postId, initialLikeCount, initialLiked }) {
+export default function LikeButton({ postId = null, videoId = null, initialLikeCount, initialLiked }) {
   const [likeCount, setLikeCount] = useState(initialLikeCount);
   const [liked, setLiked] = useState(initialLiked);
   const [loading, setLoading] = useState(false);
@@ -11,7 +11,7 @@ export default function LikeButton({ postId, initialLikeCount, initialLiked }) {
     if (loading) return;
     setLoading(true);
     try {
-      await api.toggleLike(postId);
+      await api.toggleLike({ postId, videoId });
       setLikeCount(liked ? likeCount - 1 : likeCount + 1);
       setLiked(!liked);
     } catch (err) {

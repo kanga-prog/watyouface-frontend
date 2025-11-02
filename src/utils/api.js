@@ -2,6 +2,7 @@
 const API_BASE = "http://172.28.24.211:8080";
 
 export const api = {
+  // 🔹 Gestion du token JWT
   getToken: () => localStorage.getItem("token"),
 
   jsonHeaders: () => ({
@@ -13,7 +14,7 @@ export const api = {
     Authorization: `Bearer ${api.getToken()}`,
   }),
 
-  // 🔹 AUTH
+  // 🔹 AUTHENTIFICATION
   login: (credentials) =>
     fetch(`${API_BASE}/api/auth/login`, {
       method: "POST",
@@ -36,7 +37,10 @@ export const api = {
     }),
 
   // 🔹 POSTS
-  getPosts: () => fetch(`${API_BASE}/api/posts`, { headers: api.authHeader() }),
+  getPosts: () =>
+    fetch(`${API_BASE}/api/posts`, {
+      headers: api.authHeader(),
+    }),
 
   createPost: (formData) =>
     fetch(`${API_BASE}/api/posts`, {
@@ -45,12 +49,12 @@ export const api = {
       body: formData,
     }),
 
-  // 🔹 LIKES
-  toggleLike: (postId) =>
+  // 🔹 LIKES (post ou vidéo)
+  toggleLike: ({ postId, videoId }) =>
     fetch(`${API_BASE}/api/likes/toggle`, {
       method: "POST",
       headers: api.jsonHeaders(),
-      body: JSON.stringify({ postId }),
+      body: JSON.stringify({ postId, videoId }),
     }),
 
   // 🔹 COMMENTS
