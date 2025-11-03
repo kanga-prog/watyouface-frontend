@@ -1,63 +1,44 @@
+// src/utils/chatApi.js
 import SockJS from "sockjs-client";
-import { over } from "stompjs";
+import { Client } from "@stomp/stompjs";
 
-let stompClient = null;
-let connected = false;
+let client = null;
 
-/**
- * Connecte le client STOMP au backend WebSocket avec JWT.
- * @param {string} jwtToken - Token JWT de l'utilisateur
- * @param {function} onConnect - Callback à la connexion réussie
- */
 export function connect(jwtToken, onConnect) {
-  const socket = new SockJS("http://172.28.24.211:8080/ws");
-  stompClient = over(socket);
+  if (client && client.connected) return client;
 
-  const headers = { Authorization: `Bearer ${jwtToken}` };
-
-  stompClient.connect(
-    headers,
-    () => {
-      console.log("✅ Connected to WS");
-      connected = true;
+  client = new Client({
+    brokerURL: undefined, // utilisation de SockJS
+    webSocketFactory: () => new SockJS("http://172.28.24.211:8080/ws"),
+    connectHeaders: {
+      Authorization: `Bearer ${jwtToken}`,
+    },
+    debug: (str) => console.log("📡 STOMP debug:", str),
+    onConnect: (frame) => {
+      console.log("✅ STOMP connected", frame);
       if (onConnect) onConnect();
     },
-    (error) => {
-      console.error("❌ WS connection error:", error);
-      connected = false;
-    }
-  );
+    onStompError: (frame) => console.error("STOMP error", frame),
+    reconnectDelay: 5000,
+  });
 
-  return stompClient;
+  client.activate();
+  return client;
 }
 
-/**
- * S'abonne à une conversation pour recevoir les messages en temps réel.
- * @param {string|number} convId - ID de la conversation
- * @param {function} callback - Fonction appelée pour chaque message reçu
- */
-export function subscribeToConversation(convId, callback) {
-  if (!stompClient || !connected) {
-    console.warn("⚠ STOMP client not connected yet");
-    return;
-  }
-
-  stompClient.subscribe(`/topic/conversations/${convId}`, (msg) => {
-    if (msg.body) callback(JSON.parse(msg.body));
+export function subscribe(convId, handler) {
+  if (!client || !client.connected) return;
+  return client.subscribe(`/topic/conversations/${convId}`, (msg) => {
+    const body = JSON.parse(msg.body);
+    handler(body);
   });
 }
 
-/**
- * Envoie un message à une conversation via WebSocket.
- * @param {string|number} convId - ID de la conversation
- * @param {object} payload - Contenu du message { content: "..." }
- */
-export function sendMessage(convId, payload) {
-  if (!stompClient || !connected) {
-    console.warn("⚠ Cannot send message, STOMP not connected");
-    return;
-  }
-
-  // On envoie sur le mapping configuré côté backend
-  stompClient.send(`/app/chat.sendMessage`, {}, JSON.stringify(payload));
+export function sendMessage(conversationId, content) {
+  if (!client || !client.connected) throw new Error("WS not connected");
+  const payload = { conversationId, content };
+  client.publish({
+    destination: `/app/chat.sendMessage`,
+    body: JSON.stringify(payload),
+  });
 }

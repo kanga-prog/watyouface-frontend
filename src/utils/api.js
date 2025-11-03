@@ -2,7 +2,6 @@
 const API_BASE = "http://172.28.24.211:8080";
 
 export const api = {
-  // 🔹 Gestion du token JWT
   getToken: () => localStorage.getItem("token"),
 
   jsonHeaders: () => ({
@@ -14,7 +13,7 @@ export const api = {
     Authorization: `Bearer ${api.getToken()}`,
   }),
 
-  // 🔹 AUTHENTIFICATION
+  // AUTHENTIFICATION
   login: (credentials) =>
     fetch(`${API_BASE}/api/auth/login`, {
       method: "POST",
@@ -36,7 +35,7 @@ export const api = {
       body: JSON.stringify({ email: userEmail }),
     }),
 
-  // 🔹 POSTS
+  // POSTS
   getPosts: () =>
     fetch(`${API_BASE}/api/posts`, {
       headers: api.authHeader(),
@@ -49,7 +48,7 @@ export const api = {
       body: formData,
     }),
 
-  // 🔹 LIKES (post ou vidéo)
+  // LIKES
   toggleLike: ({ postId, videoId }) =>
     fetch(`${API_BASE}/api/likes/toggle`, {
       method: "POST",
@@ -57,7 +56,7 @@ export const api = {
       body: JSON.stringify({ postId, videoId }),
     }),
 
-  // 🔹 COMMENTS
+  // COMMENTS
   getComments: (postId) =>
     fetch(`${API_BASE}/api/comments/post/${postId}`, {
       headers: api.authHeader(),
@@ -69,4 +68,13 @@ export const api = {
       headers: api.jsonHeaders(),
       body: JSON.stringify({ postId, content }),
     }),
+
+  // MESSAGES / CHAT
+  fetchConversationMessages: async (conversationId) => {
+    const res = await fetch(`${API_BASE}/api/messages/${conversationId}`, {
+      headers: api.authHeader(),
+    });
+    if (!res.ok) throw new Error(`Erreur chargement messages: ${res.status}`);
+    return res.json();
+  },
 };
