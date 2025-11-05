@@ -77,4 +77,14 @@ export const api = {
     if (!res.ok) throw new Error(`Erreur chargement messages: ${res.status}`);
     return res.json();
   },
+
+  //entre deux utilisateurs, ou de groupe
+  getConversations: async () => {
+    const res = await fetch(`${API_BASE}/api/conversations`, {
+      headers: api.authHeader(),
+    });
+    if (!res.ok) throw new Error(`Erreur chargement conversations: ${res.status}`);
+    return res.json();
+  },
+
 };

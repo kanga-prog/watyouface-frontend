@@ -7,6 +7,7 @@ export default function ChatWindow({ convId }) {
   const [messages, setMessages] = useState([]);
   const token = localStorage.getItem("token");
   const subRef = useRef(null);
+  const messagesEndRef = useRef(null); // <- référence pour scroll automatique
 
   useEffect(() => {
     if (!token) return;
@@ -32,6 +33,13 @@ export default function ChatWindow({ convId }) {
     };
   }, [convId, token]);
 
+  // Scroll automatique quand messages changent
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
+
   const handleSend = async (content) => {
     try {
       sendMessage(convId, content);
@@ -41,15 +49,16 @@ export default function ChatWindow({ convId }) {
   };
 
   return (
-    <div className="chat-window">
-      <div className="messages">
+    <div className="chat-window flex flex-col h-full">
+      <div className="messages flex-1 overflow-y-auto p-2">
         {messages.map((m) => (
-          <div key={m.id || Math.random()}>
+          <div key={m.id || Math.random()} className="mb-2">
             <strong>{m.senderUsername}</strong>: {m.content}
           </div>
         ))}
+        <div ref={messagesEndRef} /> {/* scroll automatique */}
       </div>
-      <MessageForm onSend={handleSend} />
+      <MessageForm onSend={handleSend} /> {/* placeholder déjà présent */}
     </div>
   );
 }
