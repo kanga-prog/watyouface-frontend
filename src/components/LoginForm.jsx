@@ -24,10 +24,14 @@ export default function LoginForm() {
         throw new Error(text);
       }
 
-      const token = await res.text();
-      localStorage.setItem("token", token);
+      // 🔹 On récupère le JSON user avec token, username et avatarUrl
+      const data = await res.json();
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("username", data.username);
+      localStorage.setItem("avatarUrl", data.avatarUrl); // ✅ Nouveau
       setMessage("✅ Connexion réussie !");
-      navigate("/");
+      navigate("/"); // redirige vers la page d'accueil
     } catch (err) {
       console.error("Erreur lors du login :", err);
       setMessage("❌ " + err.message);

@@ -1,3 +1,4 @@
+// src/components/MessageForm.jsx
 import React, { useState } from "react";
 
 export default function MessageForm({ onSend }) {
@@ -11,19 +12,18 @@ export default function MessageForm({ onSend }) {
   };
 
   return (
-    <form onSubmit={submit} className="flex border-t p-2">
+    <form onSubmit={submit} className="flex items-center mt-2">
       <input
-        type="text"
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="Écrire un message..."
-        className="flex-1 rounded-lg border px-3 py-2 focus:outline-none focus:ring focus:border-blue-400"
+        className="flex-1 p-2 border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
       />
       <button
         type="submit"
-        className="ml-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+        className="bg-blue-500 text-white px-4 py-2 rounded-r-lg hover:bg-blue-600"
       >
-        Envoyer
+        Send
       </button>
     </form>
   );

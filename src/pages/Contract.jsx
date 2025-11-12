@@ -12,7 +12,7 @@ export default function Contract() {
   useEffect(() => {
     const fetchContract = async () => {
       try {
-        const res = await fetch("http://172.28.24.211:8080/api/contracts/active");
+        const res = await fetch("http://localhost:8080/api/contracts/active");
         if (!res.ok) throw new Error("Contrat non disponible");
         const data = await res.json();
         setContract(data);
@@ -39,7 +39,7 @@ export default function Contract() {
     setError("");
 
     try {
-      const res = await fetch("http://172.28.24.211:8080/api/auth/register", {
+      const res = await fetch("http://localhost:8080/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...userData, acceptTerms: true }),

@@ -7,8 +7,12 @@ export default function Profile() {
   const [activeContractId, setActiveContractId] = useState(null);
   const [loadingContract, setLoadingContract] = useState(true);
   const [downloading, setDownloading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [newUsername, setNewUsername] = useState("");
   const navigate = useNavigate();
 
+  // 🧠 Charger le profil utilisateur
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -16,23 +20,25 @@ export default function Profile() {
       return;
     }
 
-    // ✅ Utilise l'IP WSL2
-    fetch("http://172.28.24.211:8080/api/user/me", {
+    fetch("http://localhost:8080/api/users/me", {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {
         if (!res.ok) throw new Error("Non authentifié");
         return res.json();
       })
-      .then((data) => setUser(data))
+      .then((data) => {
+        setUser(data);
+        setNewUsername(data.username);
+      })
       .catch(() => navigate("/login"));
   }, [navigate]);
 
+  // 📄 Charger le contrat actif
   useEffect(() => {
     if (!user) return;
 
-    // ✅ Utilise l'IP WSL2
-    fetch("http://172.28.24.211:8080/api/contracts/active")
+    fetch("http://localhost:8080/api/contracts/active")
       .then((res) => {
         if (!res.ok) throw new Error("Pas de contrat actif");
         return res.json();
@@ -46,16 +52,17 @@ export default function Profile() {
       });
   }, [user]);
 
+  // 📥 Télécharger le contrat
   const handleDownloadContract = async () => {
     if (!activeContractId || !user) return;
 
     setDownloading(true);
     const token = localStorage.getItem("token");
     try {
-      // ✅ Utilise l'IP WSL2
-      const response = await fetch(`http://172.28.24.211:8080/api/contracts/${activeContractId}/download`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await fetch(
+        `http://localhost:8080/api/contracts/${activeContractId}/download`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
       if (!response.ok) {
         alert("Erreur lors du téléchargement.");
@@ -79,34 +86,167 @@ export default function Profile() {
     }
   };
 
-  if (!user) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <p className="text-gray-500">Chargement...</p>
-    </div>
-  );
+  // ... imports et hooks inchangés
+
+// 🖼️ Upload de l’avatar
+const handleAvatarUpload = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  setUploading(true);
+
+  const token = localStorage.getItem("token");
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    const response = await fetch("http://localhost:8080/api/users/avatar", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      alert("Erreur lors de l'upload de l'avatar");
+      return;
+    }
+
+    const data = await response.json();
+    setUser((prev) => ({ ...prev, avatarUrl: data.avatarUrl }));
+    localStorage.setItem("avatarUrl", data.avatarUrl); // 🔹 met à jour le localStorage
+  } catch (err) {
+    console.error(err);
+    alert("Une erreur est survenue.");
+  } finally {
+    setUploading(false);
+  }
+};
+
+
+  // ✏️ Modifier le username
+  const handleUsernameUpdate = async () => {
+    if (!newUsername.trim()) {
+      alert("Le nom d’utilisateur ne peut pas être vide.");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    try {
+      const response = await fetch("http://localhost:8080/api/users/update", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ username: newUsername }),
+      });
+
+      if (!response.ok) {
+        alert("Erreur lors de la mise à jour du nom d’utilisateur.");
+        return;
+      }
+
+      const data = await response.json();
+      setUser((prev) => ({ ...prev, username: data.username }));
+      setEditingUsername(false);
+    } catch (err) {
+      console.error(err);
+      alert("Erreur serveur.");
+    }
+  };
+
+  if (!user)
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-500">Chargement...</p>
+      </div>
+    );
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-3xl mx-auto space-y-8">
+        {/* 🧭 En-tête */}
         <div className="text-center mb-10">
           <h1 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
             👋 Bienvenue, <span className="text-blue-600">{user.username}</span>
           </h1>
-          <p className="mt-2 text-gray-600">Gérez votre compte et vos documents légaux</p>
+          <p className="mt-2 text-gray-600">
+            Gérez votre compte, votre image et vos documents légaux
+          </p>
         </div>
 
-        <div className="bg-white shadow rounded-lg p-6 mb-8">
-          <div className="flex items-center space-x-4">
-            <div className="bg-blue-100 text-blue-800 w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold">
-              {user.username.charAt(0).toUpperCase()}
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">{user.username}</h2>
-              <p className="text-gray-600">{user.email}</p>
-            </div>
+        {/* 🧍 Profil utilisateur */}
+        <div className="bg-white shadow rounded-lg p-6 flex items-center space-x-6">
+          <div className="relative">
+            {user.avatarUrl ? (
+              <img
+                src={`http://localhost:8080${user.avatarUrl}`}
+                alt="Avatar"
+                className="w-20 h-20 rounded-full object-cover border-2 border-blue-500"
+              />
+            ) : (
+              <div className="bg-blue-100 text-blue-800 w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold">
+                {user.username.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <label
+              htmlFor="avatar-upload"
+              className="absolute bottom-0 right-0 bg-blue-600 text-white p-1 rounded-full cursor-pointer hover:bg-blue-700"
+              title="Changer d’avatar"
+            >
+              ✏️
+            </label>
+            <input
+              id="avatar-upload"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleAvatarUpload}
+            />
+          </div>
+
+          <div className="flex flex-col space-y-2">
+            {editingUsername ? (
+              <div className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  value={newUsername}
+                  onChange={(e) => setNewUsername(e.target.value)}
+                  className="border rounded-md px-2 py-1"
+                />
+                <button
+                  onClick={handleUsernameUpdate}
+                  className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+                >
+                  ✅
+                </button>
+                <button
+                  onClick={() => setEditingUsername(false)}
+                  className="bg-gray-300 px-3 py-1 rounded hover:bg-gray-400"
+                >
+                  ❌
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  {user.username}
+                </h2>
+                <button
+                  onClick={() => setEditingUsername(true)}
+                  className="text-blue-600 hover:text-blue-800 text-sm"
+                >
+                  ✏️ Modifier
+                </button>
+              </div>
+            )}
+            <p className="text-gray-600">{user.email}</p>
+            {uploading && (
+              <p className="text-sm text-blue-500 mt-1">Mise à jour...</p>
+            )}
           </div>
         </div>
 
+        {/* 📜 Contrat légal */}
         <div className="bg-white shadow rounded-lg p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
@@ -130,15 +270,41 @@ export default function Profile() {
                 onClick={handleDownloadContract}
                 disabled={downloading}
                 className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
-                  downloading ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'
+                  downloading
+                    ? "bg-gray-400"
+                    : "bg-blue-600 hover:bg-blue-700"
                 }`}
               >
-                {downloading ? 'Préparation...' : '📄 Télécharger le PDF'}
+                {downloading ? "Préparation..." : "📄 Télécharger le PDF"}
               </button>
             </div>
           ) : (
             <p className="text-red-600">Aucun contrat actif.</p>
           )}
+        </div>
+
+        {/* 🪞 Vue publique : "Comment les autres te voient" */}
+        <div className="bg-white shadow rounded-lg p-6 text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            👀 Comment les autres te voient
+          </h2>
+          <div className="flex flex-col items-center space-y-3">
+            {user.avatarUrl ? (
+              <img
+                src={`http://localhost:8080${user.avatarUrl}`}
+                alt="Avatar public"
+                className="w-16 h-16 rounded-full border-2 border-blue-500 object-cover"
+              />
+            ) : (
+              <div className="bg-blue-100 text-blue-800 w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold">
+                {user.username.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <p className="text-lg font-semibold text-gray-900">{user.username}</p>
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700">
+              🟢 En ligne
+            </span>
+          </div>
         </div>
       </div>
     </div>

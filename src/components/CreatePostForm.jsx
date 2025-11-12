@@ -45,7 +45,7 @@ export default function CreatePostForm({ onPostCreated }) {
 
     try {
       const token = api.getToken();
-      const res = await fetch("http://172.28.24.211:8080/api/posts", {
+      const res = await fetch("http://localhost:8080/api/posts", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

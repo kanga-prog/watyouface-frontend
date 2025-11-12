@@ -1,5 +1,5 @@
 // src/utils/api.js
-const API_BASE = "http://172.28.24.211:8080";
+const API_BASE = "http://localhost:8080";
 
 export const api = {
   getToken: () => localStorage.getItem("token"),
@@ -86,5 +86,23 @@ export const api = {
     if (!res.ok) throw new Error(`Erreur chargement conversations: ${res.status}`);
     return res.json();
   },
+  uploadAvatar: (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return fetch(`${API_BASE}/api/users/avatar`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${api.getToken()}` },
+      body: formData,
+    });
+  },
+  
+  getProfile: async () => {
+    const res = await fetch(`${API_BASE}/api/users/me`, {
+      headers: api.authHeader(),
+    });
+    if (!res.ok) throw new Error(`Erreur de profil : ${res.status}`);
+    return res.json();
+  },
+
 
 };
