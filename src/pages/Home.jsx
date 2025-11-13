@@ -13,80 +13,79 @@ export default function Home() {
   const [jwtToken, setJwtToken] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [conversations, setConversations] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
   const [selectedConvId, setSelectedConvId] = useState(null);
 
   const navigate = useNavigate();
 
-  // 🔹 Charger le profil utilisateur connecté
   const loadUser = async () => {
     try {
       const data = await api.getProfile();
       setCurrentUser(data);
     } catch (err) {
-      console.warn("Erreur de chargement du profil :", err);
+      console.warn("Erreur profil :", err);
     }
   };
 
-  // 🔹 Charger les posts
   const loadPosts = async () => {
     const token = localStorage.getItem("token");
     if (!token) return navigate("/login");
-
     setJwtToken(token);
 
     try {
       const res = await api.getPosts();
       const data = await res.json();
-
-      // ✅ Correction : si backend renvoie { content: [...] }
-      const postsArray = Array.isArray(data) ? data : data.content || [];
-      setPosts(postsArray);
+      setPosts(Array.isArray(data) ? data : data.content || []);
     } catch (err) {
-      console.error("Erreur de chargement des posts :", err);
-      setPosts([]); // éviter crash en cas d’erreur
+      console.error("Erreur posts:", err);
+      setPosts([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // 🔹 Charger les conversations
   const loadConversations = async () => {
     try {
       const data = await api.getConversations();
       const convArray = Array.isArray(data) ? data : [];
       setConversations(convArray.map((c) => ({ ...c, unread: false })));
-
       if (convArray.length > 0) setSelectedConvId(convArray[0].id);
     } catch (err) {
-      console.error("Erreur de chargement des conversations :", err);
+      console.error("Erreur conv:", err);
     }
   };
 
-  // 🔹 Connexion WebSocket et notifications
+  const loadAllUsers = async () => {
+    try {
+      const users = await api.getUsers();
+      setAllUsers(users.filter((u) => u.id !== currentUser?.id));
+    } catch (err) {
+      console.error("Erreur users:", err);
+    }
+  };
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
+    connect(token, () => console.log("✅ WS connecté"));
+  }, []);
 
-    connect(token, () => {
-      conversations.forEach((conv) => {
-        subscribe(conv.id, (msg) => {
-          // Si message dans conv ouverte → ChatWindow gère
-          if (conv.id === selectedConvId) return;
-
-          // Sinon → marquer "unread"
-          setConversations((prev) =>
-            prev.map((c) =>
-              c.id === conv.id
-                ? { ...c, unread: true, lastMessage: msg.content }
-                : c
-            )
-          );
-        });
+  useEffect(() => {
+    if (conversations.length === 0) return;
+    conversations.forEach((conv) => {
+      subscribe(conv.id, (msg) => {
+        if (conv.id === selectedConvId) return;
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === conv.id
+              ? { ...c, unread: true, lastMessage: msg.content }
+              : c
+          )
+        );
       });
     });
   }, [conversations, selectedConvId]);
 
-  // 🔹 Sélection d'une conversation
   const selectConversation = (id) => {
     setSelectedConvId(id);
     setConversations((prev) =>
@@ -94,24 +93,26 @@ export default function Home() {
     );
   };
 
-  // 🔹 Cliquer sur l'avatar d’un utilisateur → ouvrir ou créer une conversation
   const handleAvatarClick = async (user) => {
     try {
       const conv = await api.getOrCreateConversation(user.id);
+      await loadConversations();
       selectConversation(conv.id);
     } catch (err) {
-      console.error("Erreur ouverture conversation :", err);
+      console.error("Erreur ouverture conv:", err);
     }
   };
 
-  // 🔹 Initialisation
   useEffect(() => {
     loadUser();
     loadPosts();
     loadConversations();
   }, []);
 
-  // 🔹 Rendu
+  useEffect(() => {
+    if (currentUser) loadAllUsers();
+  }, [currentUser]);
+
   return (
     <div className="flex w-full min-h-screen bg-gray-50">
       {/* ---- FEED ---- */}
@@ -142,6 +143,7 @@ export default function Home() {
         <div className="flex-1 overflow-y-auto">
           <ChatList
             conversations={conversations}
+            users={allUsers} 
             selectedConvId={selectedConvId}
             onSelect={selectConversation}
             onAvatarClick={handleAvatarClick}

@@ -2,6 +2,7 @@ import React from "react";
 
 export default function ChatList({
   conversations,
+  users = [], // ← tous les utilisateurs pour créer une conversation
   selectedConvId,
   onSelect,
   onAvatarClick,
@@ -16,6 +17,7 @@ export default function ChatList({
 
   return (
     <div className="flex flex-col">
+      {/* ---- Conversations existantes ---- */}
       {conversations.map((conv) => {
         const isGroup = conv.isGroup;
         const otherUser = !isGroup
@@ -68,6 +70,28 @@ export default function ChatList({
           </div>
         );
       })}
+
+      {/* ---- Utilisateurs disponibles pour créer un nouveau chat ---- */}
+      {users.length > 0 && (
+        <>
+          <hr className="my-2" />
+          <p className="text-xs text-gray-400 uppercase px-2">👥 Nouveaux chats</p>
+          {users.map((user) => (
+            <div
+              key={user.id}
+              className="flex items-center p-2 rounded-lg cursor-pointer hover:bg-gray-100 mb-1"
+              onClick={() => onAvatarClick(user)}
+            >
+              <img
+                src={buildAvatarUrl(user.avatarUrl)}
+                alt="avatar"
+                className="w-10 h-10 rounded-full mr-3 object-cover"
+              />
+              <p className="font-medium truncate">{user.username}</p>
+            </div>
+          ))}
+        </>
+      )}
     </div>
   );
 }

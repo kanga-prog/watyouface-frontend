@@ -292,8 +292,8 @@ const handleAvatarUpload = async (e) => {
             {user.avatarUrl ? (
               <img
                 src={`http://localhost:8080${user.avatarUrl}`}
-                alt="Avatar public"
-                className="w-16 h-16 rounded-full border-2 border-blue-500 object-cover"
+                alt="Avatar public "
+                className="avatar-small"
               />
             ) : (
               <div className="bg-blue-100 text-blue-800 w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold">

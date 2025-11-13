@@ -28,7 +28,7 @@ export default function Navbar() {
               <img
                 src={`http://localhost:8080${avatarUrl}`}
                 alt="Avatar"
-                className="w-8 h-8 rounded-full object-cover border-2 border-white"
+                className="avatar-small"
               />
             )}
             <span className="font-medium">{username}</span>

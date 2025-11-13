@@ -4,9 +4,10 @@ import { Client } from "@stomp/stompjs";
 const WS_URL = import.meta.env.VITE_WS_URL || "http://localhost:8080/ws";
 
 let client = null;
+const subscriptions = {}; // garder trace des souscriptions
 
 export function connect(jwtToken, onConnect) {
-  if (client && client.connected) return client;
+  if (client && client.active) return client; // déjà connecté
 
   client = new Client({
     brokerURL: undefined, // SockJS utilisée
@@ -18,7 +19,7 @@ export function connect(jwtToken, onConnect) {
     reconnectDelay: 5000,
 
     onConnect: (frame) => {
-      console.log("✅ WS connecté");
+      console.log("✅ WS connecté au serveur", WS_URL);
       if (onConnect) onConnect();
     },
 
@@ -32,7 +33,7 @@ export function connect(jwtToken, onConnect) {
 }
 
 export function subscribe(convId, handler) {
-  if (!client || !client.connected) {
+  if (!client || !client.active) {
     console.warn("⚠️ Client STOMP non connecté");
     return;
   }
@@ -40,17 +41,22 @@ export function subscribe(convId, handler) {
   const topic = `/topic/conversations/${convId}`;
 
   // Empêche souscription multiple
-  if (client.subscriptions[topic]) {
-    return client.subscriptions[topic];
-  }
+  if (subscriptions[topic]) return subscriptions[topic];
 
-  return client.subscribe(topic, (msg) => {
-    handler(JSON.parse(msg.body));
+  const sub = client.subscribe(topic, (msg) => {
+    try {
+      handler(JSON.parse(msg.body));
+    } catch (err) {
+      console.error("Erreur parsing message:", err, msg.body);
+    }
   });
+
+  subscriptions[topic] = sub;
+  return sub;
 }
 
 export function sendMessage(conversationId, content) {
-  if (!client || !client.connected) throw new Error("WS non connecté");
+  if (!client || !client.active) throw new Error("WS non connecté");
 
   const payload = { conversationId, content };
 

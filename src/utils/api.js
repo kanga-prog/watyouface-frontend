@@ -13,7 +13,7 @@ export const api = {
     Authorization: `Bearer ${api.getToken()}`,
   }),
 
-  // AUTHENTIFICATION
+  // 🔹 AUTHENTIFICATION
   login: (credentials) =>
     fetch(`${API_BASE}/api/auth/login`, {
       method: "POST",
@@ -35,7 +35,7 @@ export const api = {
       body: JSON.stringify({ email: userEmail }),
     }),
 
-  // POSTS
+  // 🔹 POSTS
   getPosts: () =>
     fetch(`${API_BASE}/api/posts`, {
       headers: api.authHeader(),
@@ -48,7 +48,7 @@ export const api = {
       body: formData,
     }),
 
-  // LIKES
+  // 🔹 LIKES
   toggleLike: ({ postId, videoId }) =>
     fetch(`${API_BASE}/api/likes/toggle`, {
       method: "POST",
@@ -56,7 +56,7 @@ export const api = {
       body: JSON.stringify({ postId, videoId }),
     }),
 
-  // COMMENTS
+  // 🔹 COMMENTS
   getComments: (postId) =>
     fetch(`${API_BASE}/api/comments/post/${postId}`, {
       headers: api.authHeader(),
@@ -69,7 +69,7 @@ export const api = {
       body: JSON.stringify({ postId, content }),
     }),
 
-  // MESSAGES / CHAT
+  // 🔹 MESSAGES / CHAT
   fetchConversationMessages: async (conversationId) => {
     const res = await fetch(`${API_BASE}/api/messages/${conversationId}`, {
       headers: api.authHeader(),
@@ -78,14 +78,27 @@ export const api = {
     return res.json();
   },
 
-  //entre deux utilisateurs, ou de groupe
   getConversations: async () => {
     const res = await fetch(`${API_BASE}/api/conversations`, {
       headers: api.authHeader(),
     });
-    if (!res.ok) throw new Error(`Erreur chargement conversations: ${res.status}`);
+    if (!res.ok)
+      throw new Error(`Erreur chargement conversations: ${res.status}`);
     return res.json();
   },
+
+  // ✅ Créer ou récupérer une conversation entre deux utilisateurs
+  getOrCreateConversation: async (otherUserId) => {
+    const res = await fetch(`${API_BASE}/api/conversations/with/${otherUserId}`, {
+      method: "POST",
+      headers: api.authHeader(),
+    });
+    if (!res.ok)
+      throw new Error(`Erreur création conversation: ${res.status}`);
+    return res.json();
+  },
+
+  // 🔹 PROFIL & UTILISATEURS
   uploadAvatar: (file) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -95,7 +108,7 @@ export const api = {
       body: formData,
     });
   },
-  
+
   getProfile: async () => {
     const res = await fetch(`${API_BASE}/api/users/me`, {
       headers: api.authHeader(),
@@ -104,5 +117,21 @@ export const api = {
     return res.json();
   },
 
+  getUsers: async () => {
+    const res = await fetch(`${API_BASE}/api/users`, {
+      headers: api.authHeader(),
+    });
+    if (!res.ok) throw new Error("Erreur fetch users");
+    return res.json();
+  },
+
+  createPrivateConversation: async (otherUserId) => {
+    const res = await fetch(`${API_BASE}/api/conversations/private/${otherUserId}`, {
+      method: "POST",
+      headers: api.authHeader(),
+    });
+    if (!res.ok) throw new Error("Erreur création conversation");
+    return res.json();
+  },
 
 };
