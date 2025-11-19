@@ -21,7 +21,7 @@ export default function ChatWindow({ convId, jwtToken, username }) {
 
     const loadMessages = async () => {
       try {
-        const data = await fetch(`http://localhost:8080/api/conversations/${convId}/messages`, {
+        const data = await fetch(`http://localhost:8080/api/messages/conversations/${convId}/messages`, {
           headers: { Authorization: `Bearer ${jwtToken}` },
         }).then(res => res.json());
 

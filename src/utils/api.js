@@ -71,7 +71,7 @@ export const api = {
 
   // 🔹 MESSAGES / CHAT
   fetchConversationMessages: async (conversationId) => {
-    const res = await fetch(`${API_BASE}/api/messages/${conversationId}`, {
+    const res = await fetch(`${API_BASE}/api/messages/conversations/${conversationId}/messages`, {
       headers: api.authHeader(),
     });
     if (!res.ok) throw new Error(`Erreur chargement messages: ${res.status}`);

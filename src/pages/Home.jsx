@@ -134,16 +134,15 @@ export default function Home() {
         )}
       </main>
 
-      {/* ---- CHAT ---- */}
-      <aside className="w-80 border-l bg-white flex flex-col">
-        <div className="p-4 border-b">
-          <h2 className="font-semibold text-lg">💬 Conversations</h2>
+      <aside className="w-96 bg-white border-l flex flex-col">
+        <div className="p-4 border-b bg-gray-50">
+          <h2 className="font-bold text-xl text-gray-700">💬 Chat</h2>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="h-64 overflow-y-auto border-b">
           <ChatList
             conversations={conversations}
-            users={allUsers} 
+            users={allUsers}
             selectedConvId={selectedConvId}
             onSelect={selectConversation}
             onAvatarClick={handleAvatarClick}
@@ -151,13 +150,17 @@ export default function Home() {
           />
         </div>
 
-        <div className="border-t p-3 h-96 flex flex-col">
+        <div className="flex-1 flex flex-col bg-gray-50">
           {jwtToken && selectedConvId ? (
-            <ChatWindow convId={selectedConvId} jwtToken={jwtToken} />
+            <ChatWindow
+              convId={selectedConvId}
+              jwtToken={jwtToken}
+              username={currentUser?.username}
+            />
           ) : (
-            <p className="text-center text-gray-500">
+            <div className="flex items-center justify-center flex-1 text-gray-400">
               Sélectionnez une conversation
-            </p>
+            </div>
           )}
         </div>
       </aside>

@@ -193,7 +193,7 @@ const handleAvatarUpload = async (e) => {
               className="absolute bottom-0 right-0 bg-blue-600 text-white p-1 rounded-full cursor-pointer hover:bg-blue-700"
               title="Changer d’avatar"
             >
-              ✏️
+              ✏️Modifier
             </label>
             <input
               id="avatar-upload"
