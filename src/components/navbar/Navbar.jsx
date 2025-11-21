@@ -1,4 +1,7 @@
+// src/components/navbar/Navbar.jsx
 import { Link, useNavigate } from "react-router-dom";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Button } from "../ui/button";
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -16,27 +19,36 @@ export default function Navbar() {
   return (
     <nav className="bg-gray-800 text-white p-3 flex justify-between items-center">
       <Link to="/" className="font-bold text-lg">WatYouFace</Link>
+
       <div className="flex gap-4 items-center">
+        {token && (
+          <>
+            <Link to="/">Feed</Link>
+            <Link to="/marketplace">Marketplace</Link>
+            <Link to="/messages">Messagerie</Link>
+          </>
+        )}
+
         {!token ? (
           <>
             <Link to="/login">Connexion</Link>
             <Link to="/register">Inscription</Link>
           </>
         ) : (
-          <>
-            {avatarUrl && (
-              <img
-                src={`http://localhost:8080${avatarUrl}`}
-                alt="Avatar"
-                className="avatar-small"
-              />
-            )}
+          <div className="flex items-center gap-2">
+            <Avatar className="w-8 h-8">
+              {avatarUrl ? (
+                <AvatarImage src={`http://localhost:8080${avatarUrl}`} />
+              ) : (
+                <AvatarFallback>{username?.charAt(0)}</AvatarFallback>
+              )}
+            </Avatar>
             <span className="font-medium">{username}</span>
             <Link to="/profile">Profil</Link>
-            <button onClick={handleLogout} className="text-red-400">
+            <Button variant="destructive" onClick={handleLogout}>
               Déconnexion
-            </button>
-          </>
+            </Button>
+          </div>
         )}
       </div>
     </nav>

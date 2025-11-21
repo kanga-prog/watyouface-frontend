@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react"; 
-import { connect, subscribe, sendMessage } from "../utils/chatApi";
+import { connect, subscribe, sendMessage } from "../../utils/chatApi";
 import MessageForm from "./MessageForm";
 
 export default function ChatWindow({ convId, jwtToken, username }) {
@@ -15,7 +15,6 @@ export default function ChatWindow({ convId, jwtToken, username }) {
   const buildMediaUrl = (path) =>
     path ? (path.startsWith("http") ? path : `http://localhost:8080${path}`) : "http://localhost:8080/uploads/avatars/default.png";
 
-  // 🔹 Récupération des messages au chargement
   useEffect(() => {
     if (!jwtToken || !convId) return;
 
@@ -25,7 +24,6 @@ export default function ChatWindow({ convId, jwtToken, username }) {
           headers: { Authorization: `Bearer ${jwtToken}` },
         }).then(res => res.json());
 
-        // Assurer que c'est un tableau
         const list = Array.isArray(data) ? data : data.content?.reverse() || [];
         setMessages(list);
       } catch (err) {
@@ -38,7 +36,6 @@ export default function ChatWindow({ convId, jwtToken, username }) {
     loadMessages();
   }, [convId, jwtToken]);
 
-  // 🔹 Abonnement STOMP pour les nouveaux messages
   useEffect(() => {
     if (!jwtToken || !convId) return;
 
@@ -77,7 +74,7 @@ export default function ChatWindow({ convId, jwtToken, username }) {
               <div key={m.id || Math.random()} className={`flex items-end mb-3 ${isOwn ? "justify-end" : "justify-start"}`}>
                 {!isOwn && <img src={avatarUrl} alt="avatar" className="w-8 h-8 rounded-full mr-2 object-cover border border-gray-300" />}
                 <div className={`max-w-[70%] p-2 rounded-lg shadow ${isOwn ? "bg-blue-500 text-white ml-2" : "bg-gray-200 text-gray-800"}`}>
-                  {!isOwn && <p className="text-xs font-semibold text-gray-600 mb-1">{m.senderUsername}</p>}
+                  {!isOwn && <p className="text-xs font-semibold text-gray-600 mb-1">{m.senderUsername?.charAt(0).toUpperCase() + m.senderUsername?.slice(1)}</p>}
                   <p className="text-sm break-words">{m.content}</p>
                   <p className="text-[10px] text-right text-gray-400 mt-1">{new Date(m.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>
                 </div>

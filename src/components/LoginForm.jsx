@@ -1,7 +1,9 @@
-// src/components/LoginForm.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../utils/api"; // ✅ Importe api
+import { api } from "../utils/api";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
+import { Card } from "./ui/card";
 
 export default function LoginForm() {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -16,7 +18,6 @@ export default function LoginForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // ✅ Utilise api.login()
       const res = await api.login(formData);
 
       if (!res.ok) {
@@ -24,14 +25,13 @@ export default function LoginForm() {
         throw new Error(text);
       }
 
-      // 🔹 On récupère le JSON user avec token, username et avatarUrl
       const data = await res.json();
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("username", data.username);
-      localStorage.setItem("avatarUrl", data.avatarUrl); // ✅ Nouveau
+      localStorage.setItem("avatarUrl", data.avatarUrl);
       setMessage("✅ Connexion réussie !");
-      navigate("/"); // redirige vers la page d'accueil
+      navigate("/");
     } catch (err) {
       console.error("Erreur lors du login :", err);
       setMessage("❌ " + err.message);
@@ -39,35 +39,30 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="p-4 max-w-md mx-auto">
-      <h2 className="text-xl font-semibold mb-4 text-center">Connexion</h2>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <input
+    <Card className="p-8 max-w-md mx-auto mt-20">
+      <h2 className="text-2xl font-semibold mb-6 text-center">Connexion</h2>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <Input
           type="email"
           name="email"
           placeholder="Adresse e-mail"
           value={formData.email}
           onChange={handleChange}
-          className="border p-2 rounded"
           required
         />
-        <input
+        <Input
           type="password"
           name="password"
           placeholder="Mot de passe"
           value={formData.password}
           onChange={handleChange}
-          className="border p-2 rounded"
           required
         />
-        <button
-          type="submit"
-          className="bg-green-600 text-white rounded p-2 hover:bg-green-700"
-        >
+        <Button type="submit" variant="default">
           Se connecter
-        </button>
+        </Button>
       </form>
-      {message && <p className="mt-3 text-sm">{message}</p>}
-    </div>
+      {message && <p className="mt-3 text-center text-sm">{message}</p>}
+    </Card>
   );
 }

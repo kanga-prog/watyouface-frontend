@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Navbar from "./components/Navbar";
+import Navbar from "./components/navbar/Navbar";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import Login from "./pages/Login";
@@ -7,20 +7,24 @@ import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
 import Contract from "./pages/Contract";
 
+// Nouvelles pages à créer
+import Marketplace from "./pages/Marketplace";
+import Messages from "./pages/Messages";
 
 export default function App() {
   return (
     <Router>
       <div className="min-h-screen bg-gray-100">
-        
         <Navbar />
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Home />} />           {/* Feed */}
+          <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/messages" element={<Messages />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/contract" element={<Contract />} />
           <Route path="*" element={<NotFound />} />
-           <Route path="/contract" element={<Contract />} />
         </Routes>
       </div>
     </Router>

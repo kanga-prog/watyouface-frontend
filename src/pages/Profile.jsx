@@ -1,13 +1,12 @@
-// src/pages/Profile.jsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import AvatarUpload from "../components/profile/AvatarUpload";
 
 export default function Profile() {
   const [user, setUser] = useState(null);
   const [activeContractId, setActiveContractId] = useState(null);
   const [loadingContract, setLoadingContract] = useState(true);
   const [downloading, setDownloading] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [editingUsername, setEditingUsername] = useState(false);
   const [newUsername, setNewUsername] = useState("");
   const navigate = useNavigate();
@@ -47,15 +46,12 @@ export default function Profile() {
         setActiveContractId(data.id);
         setLoadingContract(false);
       })
-      .catch(() => {
-        setLoadingContract(false);
-      });
+      .catch(() => setLoadingContract(false));
   }, [user]);
 
   // 📥 Télécharger le contrat
   const handleDownloadContract = async () => {
     if (!activeContractId || !user) return;
-
     setDownloading(true);
     const token = localStorage.getItem("token");
     try {
@@ -63,12 +59,10 @@ export default function Profile() {
         `http://localhost:8080/api/contracts/${activeContractId}/download`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
       if (!response.ok) {
         alert("Erreur lors du téléchargement.");
         return;
       }
-
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -86,49 +80,12 @@ export default function Profile() {
     }
   };
 
-  // ... imports et hooks inchangés
-
-// 🖼️ Upload de l’avatar
-const handleAvatarUpload = async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  setUploading(true);
-
-  const token = localStorage.getItem("token");
-  const formData = new FormData();
-  formData.append("file", file);
-
-  try {
-    const response = await fetch("http://localhost:8080/api/users/avatar", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      alert("Erreur lors de l'upload de l'avatar");
-      return;
-    }
-
-    const data = await response.json();
-    setUser((prev) => ({ ...prev, avatarUrl: data.avatarUrl }));
-    localStorage.setItem("avatarUrl", data.avatarUrl); // 🔹 met à jour le localStorage
-  } catch (err) {
-    console.error(err);
-    alert("Une erreur est survenue.");
-  } finally {
-    setUploading(false);
-  }
-};
-
-
   // ✏️ Modifier le username
   const handleUsernameUpdate = async () => {
     if (!newUsername.trim()) {
       alert("Le nom d’utilisateur ne peut pas être vide.");
       return;
     }
-
     const token = localStorage.getItem("token");
     try {
       const response = await fetch("http://localhost:8080/api/users/update", {
@@ -139,12 +96,10 @@ const handleAvatarUpload = async (e) => {
         },
         body: JSON.stringify({ username: newUsername }),
       });
-
       if (!response.ok) {
         alert("Erreur lors de la mise à jour du nom d’utilisateur.");
         return;
       }
-
       const data = await response.json();
       setUser((prev) => ({ ...prev, username: data.username }));
       setEditingUsername(false);
@@ -154,6 +109,11 @@ const handleAvatarUpload = async (e) => {
     }
   };
 
+  const handleAvatarUpload = (avatarUrl) => {
+    setUser((prev) => ({ ...prev, avatarUrl }));
+    localStorage.setItem("avatarUrl", avatarUrl);
+  };
+
   if (!user)
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -161,49 +121,28 @@ const handleAvatarUpload = async (e) => {
       </div>
     );
 
+  const capitalizedUsername =
+    user.username.charAt(0).toUpperCase() + user.username.slice(1);
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto space-y-8">
-        {/* 🧭 En-tête */}
+        {/* En-tête */}
         <div className="text-center mb-10">
           <h1 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-            👋 Bienvenue, <span className="text-blue-600">{user.username}</span>
+            👋 Bienvenue, <span className="text-blue-600">{capitalizedUsername}</span>
           </h1>
           <p className="mt-2 text-gray-600">
             Gérez votre compte, votre image et vos documents légaux
           </p>
         </div>
 
-        {/* 🧍 Profil utilisateur */}
+        {/* Profil utilisateur */}
         <div className="bg-white shadow rounded-lg p-6 flex items-center space-x-6">
-          <div className="relative">
-            {user.avatarUrl ? (
-              <img
-                src={`http://localhost:8080${user.avatarUrl}`}
-                alt="Avatar"
-                className="w-20 h-20 rounded-full object-cover border-2 border-blue-500"
-              />
-            ) : (
-              <div className="bg-blue-100 text-blue-800 w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold">
-                {user.username.charAt(0).toUpperCase()}
-              </div>
-            )}
-            <label
-              htmlFor="avatar-upload"
-              className="absolute bottom-0 right-0 bg-blue-600 text-white p-1 rounded-full cursor-pointer hover:bg-blue-700"
-              title="Changer d’avatar"
-            >
-              ✏️Modifier
-            </label>
-            <input
-              id="avatar-upload"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleAvatarUpload}
-            />
-          </div>
-
+          <AvatarUpload
+            onUpload={handleAvatarUpload}
+            currentAvatarUrl={user.avatarUrl}
+          />
           <div className="flex flex-col space-y-2">
             {editingUsername ? (
               <div className="flex items-center space-x-2">
@@ -229,7 +168,7 @@ const handleAvatarUpload = async (e) => {
             ) : (
               <div className="flex items-center space-x-2">
                 <h2 className="text-xl font-semibold text-gray-900">
-                  {user.username}
+                  {capitalizedUsername}
                 </h2>
                 <button
                   onClick={() => setEditingUsername(true)}
@@ -240,13 +179,10 @@ const handleAvatarUpload = async (e) => {
               </div>
             )}
             <p className="text-gray-600">{user.email}</p>
-            {uploading && (
-              <p className="text-sm text-blue-500 mt-1">Mise à jour...</p>
-            )}
           </div>
         </div>
 
-        {/* 📜 Contrat légal */}
+        {/* Contrat légal */}
         <div className="bg-white shadow rounded-lg p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
@@ -270,9 +206,7 @@ const handleAvatarUpload = async (e) => {
                 onClick={handleDownloadContract}
                 disabled={downloading}
                 className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
-                  downloading
-                    ? "bg-gray-400"
-                    : "bg-blue-600 hover:bg-blue-700"
+                  downloading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
                 }`}
               >
                 {downloading ? "Préparation..." : "📄 Télécharger le PDF"}
@@ -283,24 +217,22 @@ const handleAvatarUpload = async (e) => {
           )}
         </div>
 
-        {/* 🪞 Vue publique : "Comment les autres te voient" */}
+        {/* Vue publique */}
         <div className="bg-white shadow rounded-lg p-6 text-center">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
             👀 Comment les autres te voient
           </h2>
           <div className="flex flex-col items-center space-y-3">
-            {user.avatarUrl ? (
-              <img
-                src={`http://localhost:8080${user.avatarUrl}`}
-                alt="Avatar public "
-                className="avatar-small"
-              />
-            ) : (
-              <div className="bg-blue-100 text-blue-800 w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold">
-                {user.username.charAt(0).toUpperCase()}
-              </div>
-            )}
-            <p className="text-lg font-semibold text-gray-900">{user.username}</p>
+            <img
+              src={user.avatarUrl ? `http://localhost:8080${user.avatarUrl}` : ""}
+              alt="Avatar public"
+              className="w-16 h-16 rounded-full object-cover"
+              onError={(e) =>
+                (e.target.src =
+                  "http://localhost:8080/uploads/avatars/default.png")
+              }
+            />
+            <p className="text-lg font-semibold text-gray-900">{capitalizedUsername}</p>
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700">
               🟢 En ligne
             </span>

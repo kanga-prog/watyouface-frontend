@@ -1,4 +1,3 @@
-// src/components/MessageForm.jsx
 import React, { useState } from "react";
 
 export default function MessageForm({ onSend }) {
@@ -7,7 +6,7 @@ export default function MessageForm({ onSend }) {
   const submit = (e) => {
     e.preventDefault();
     if (!text.trim()) return;
-    onSend(text);
+    onSend(text); // message inchangé
     setText("");
   };
 
@@ -23,7 +22,7 @@ export default function MessageForm({ onSend }) {
         type="submit"
         className="bg-blue-500 text-white px-4 py-2 rounded-r-lg hover:bg-blue-600"
       >
-        Send
+        Envoyer
       </button>
     </form>
   );

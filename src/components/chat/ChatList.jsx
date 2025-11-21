@@ -2,7 +2,7 @@ import React from "react";
 
 export default function ChatList({
   conversations,
-  users = [], // ← tous les utilisateurs pour créer une conversation
+  users = [],
   selectedConvId,
   onSelect,
   onAvatarClick,
@@ -17,7 +17,6 @@ export default function ChatList({
 
   return (
     <div className="flex flex-col">
-      {/* ---- Conversations existantes ---- */}
       {conversations.map((conv) => {
         const isGroup = conv.isGroup;
         const otherUser = !isGroup
@@ -28,11 +27,8 @@ export default function ChatList({
           <div
             key={conv.id}
             onClick={() => onSelect(conv.id)}
-            className={`relative flex items-center p-2 cursor-pointer rounded-lg mb-1 transition ${
-              selectedConvId === conv.id ? "bg-blue-100" : "hover:bg-gray-100"
-            }`}
+            className={`relative flex items-center p-2 cursor-pointer rounded-lg mb-1 transition ${selectedConvId === conv.id ? "bg-blue-100" : "hover:bg-gray-100"}`}
           >
-            {/* Avatar */}
             {!isGroup ? (
               <img
                 src={buildAvatarUrl(otherUser?.avatarUrl)}
@@ -43,27 +39,22 @@ export default function ChatList({
                   onAvatarClick?.(otherUser);
                 }}
                 onError={(e) =>
-                  (e.target.src =
-                    "http://localhost:8080/uploads/avatars/default.png")
+                  (e.target.src = "http://localhost:8080/uploads/avatars/default.png")
                 }
               />
             ) : (
-              <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center mr-3">
-                👥
-              </div>
+              <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center mr-3">👥</div>
             )}
 
-            {/* Nom + dernier msg */}
             <div className="flex-1 min-w-0">
               <p className="font-medium truncate">
-                {isGroup ? conv.name : otherUser?.username}
+                {isGroup ? conv.name : otherUser?.username?.charAt(0).toUpperCase() + otherUser?.username?.slice(1)}
               </p>
               <p className="text-xs text-gray-500 truncate">
                 {conv.lastMessage || "Aucun message"}
               </p>
             </div>
 
-            {/* Pastille rouge si non lu */}
             {conv.unread && (
               <div className="absolute right-2 w-3 h-3 bg-red-500 rounded-full"></div>
             )}
@@ -71,7 +62,6 @@ export default function ChatList({
         );
       })}
 
-      {/* ---- Utilisateurs disponibles pour créer un nouveau chat ---- */}
       {users.length > 0 && (
         <>
           <hr className="my-2" />
@@ -87,7 +77,7 @@ export default function ChatList({
                 alt="avatar"
                 className="w-10 h-10 rounded-full mr-3 object-cover"
               />
-              <p className="font-medium truncate">{user.username}</p>
+              <p className="font-medium truncate">{user.username?.charAt(0).toUpperCase() + user.username?.slice(1)}</p>
             </div>
           ))}
         </>

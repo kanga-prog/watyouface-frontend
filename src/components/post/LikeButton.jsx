@@ -1,6 +1,7 @@
-// src/components/LikeButton.jsx
-import { useState, useEffect } from "react";
-import { api } from "../utils/api";
+// src/components/post/LikeButton.jsx
+import { useState } from "react";
+import { api } from "../../utils/api";
+import { Button } from "../ui/button";
 
 export default function LikeButton({ postId = null, videoId = null, initialLikeCount, initialLiked }) {
   const [likeCount, setLikeCount] = useState(initialLikeCount);
@@ -22,14 +23,17 @@ export default function LikeButton({ postId = null, videoId = null, initialLikeC
   };
 
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="sm"
       onClick={handleLike}
       disabled={loading}
       className={`flex items-center space-x-1 text-sm font-medium ${
         liked ? "text-red-500" : "text-gray-500 hover:text-red-500"
       }`}
     >
-      {liked ? "❤️" : "🤍"} <span>{likeCount}</span>
-    </button>
+      <span>{liked ? "❤️" : "🤍"}</span>
+      <span>{likeCount}</span>
+    </Button>
   );
 }
