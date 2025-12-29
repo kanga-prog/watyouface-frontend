@@ -1,7 +1,7 @@
 import React from "react";
 
 export default function ChatList({
-  conversations,
+  conversations = [],
   users = [],
   selectedConvId,
   onSelect,
@@ -18,71 +18,75 @@ export default function ChatList({
   return (
     <div className="flex flex-col">
       {conversations.map((conv) => {
-        const isGroup = conv.isGroup;
+        const isGroup = conv.group || conv.isGroup;
+
+        const participants = Array.isArray(conv.participants)
+          ? conv.participants
+          : [];
+
         const otherUser = !isGroup
-          ? conv.participants?.find((u) => u.id !== currentUserId)
+          ? participants.find((u) => u.id !== currentUserId)
           : null;
+
+        const displayName = isGroup
+          ? conv.title || "Groupe"
+          : otherUser?.username || "Conversation";
 
         return (
           <div
             key={conv.id}
             onClick={() => {
-              console.log("Conversation cliquée →", conv.id); // 🔵 Log au clic
+              console.log("Conversation cliquée →", conv.id);
               onSelect(conv.id);
             }}
             className={`relative flex items-center p-2 cursor-pointer rounded-lg mb-1 transition ${
-              selectedConvId === conv.id ? "bg-blue-100" : "hover:bg-gray-100"
+              selectedConvId === conv.id
+                ? "bg-blue-100"
+                : "hover:bg-gray-100"
             }`}
           >
             {!isGroup ? (
               <img
                 src={buildAvatarUrl(otherUser?.avatarUrl)}
                 alt="avatar"
-                className="w-10 h-10 rounded-full mr-3 object-cover cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  // ⚡ Passer uniquement l'ID de l'utilisateur
-                  if (otherUser?.id) onAvatarClick?.(otherUser.id);
-                }}
+                className="w-10 h-10 rounded-full mr-3 object-cover"
                 onError={(e) =>
-                  (e.target.src = "http://localhost:8080/uploads/avatars/default.png")
+                  (e.target.src =
+                    "http://localhost:8080/uploads/avatars/default.png")
                 }
               />
             ) : (
-              <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center mr-3">👥</div>
+              <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center mr-3">
+                👥
+              </div>
             )}
 
             <div className="flex-1 min-w-0">
               <p className="font-medium truncate">
-                {isGroup
-                  ? conv.name
-                  : otherUser?.username?.charAt(0).toUpperCase() +
-                    otherUser?.username?.slice(1)}
+                {displayName}
               </p>
+
               <p className="text-xs text-gray-500 truncate">
                 {conv.lastMessage || "Aucun message"}
               </p>
             </div>
-
-            {conv.unread && (
-              <div className="absolute right-2 w-3 h-3 bg-red-500 rounded-full"></div>
-            )}
           </div>
         );
       })}
 
+      {/* NOUVEAUX CHATS */}
       {users.length > 0 && (
         <>
           <hr className="my-2" />
-          <p className="text-xs text-gray-400 uppercase px-2">👥 Nouveaux chats</p>
+          <p className="text-xs text-gray-400 uppercase px-2">
+            👥 Nouveaux chats
+          </p>
+
           {users.map((user) => (
             <div
               key={user.id}
               className="flex items-center p-2 rounded-lg cursor-pointer hover:bg-gray-100 mb-1"
-              onClick={() => {
-                console.log("Nouvel utilisateur cliqué →", user.id); // 🔵 Log au clic
-                onAvatarClick(user.id); // ⚡ Passer uniquement l'ID
-              }}
+              onClick={() => onAvatarClick(user.id)}
             >
               <img
                 src={buildAvatarUrl(user.avatarUrl)}
@@ -90,7 +94,7 @@ export default function ChatList({
                 className="w-10 h-10 rounded-full mr-3 object-cover"
               />
               <p className="font-medium truncate">
-                {user.username?.charAt(0).toUpperCase() + user.username?.slice(1)}
+                {user.username}
               </p>
             </div>
           ))}
