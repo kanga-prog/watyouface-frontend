@@ -17,39 +17,58 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-gray-800 text-white p-3 flex justify-between items-center">
-      <Link to="/" className="font-bold text-lg">WatYouFace</Link>
+    <nav className="fixed top-0 left-0 w-full z-50 bg-blue-700 shadow-md py-4">
+      <div className="container mx-auto flex justify-between items-center px-4">
+        <Link to="/" className="text-white font-bold text-xl">
+          WatYouFace
+        </Link>
 
-      <div className="flex gap-4 items-center">
-        {token && (
-          <>
-            <Link to="/">Feed</Link>
-            <Link to="/marketplace">Marketplace</Link>
-            <Link to="/messages">Messagerie</Link>
-          </>
-        )}
+        <div className="flex gap-3 items-center">
+          {token && (
+            <>
+              <Button variant="secondary">
+                <Link to="/">Feed</Link>
+              </Button>
+              <Button variant="secondary">
+                <Link to="/marketplace">Marketplace</Link>
+              </Button>
+              <Button variant="secondary">
+                <Link to="/messages">Messagerie</Link>
+              </Button>
+            </>
+          )}
 
-        {!token ? (
-          <>
-            <Link to="/login">Connexion</Link>
-            <Link to="/register">Inscription</Link>
-          </>
-        ) : (
-          <div className="flex items-center gap-2">
-            <Avatar className="w-8 h-8">
-              {avatarUrl ? (
-                <AvatarImage src={`http://localhost:8080${avatarUrl}`} />
-              ) : (
-                <AvatarFallback>{username?.charAt(0)}</AvatarFallback>
-              )}
-            </Avatar>
-            <span className="font-medium">{username}</span>
-            <Link to="/profile">Profil</Link>
-            <Button variant="destructive" onClick={handleLogout}>
-              Déconnexion
-            </Button>
-          </div>
-        )}
+          {!token ? (
+            <>
+              <Button variant="secondary">
+                <Link to="/login">Connexion</Link>
+              </Button>
+              <Button variant="secondary">
+                <Link to="/register">Inscription</Link>
+              </Button>
+            </>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Avatar className="w-8 h-8">
+                {avatarUrl ? (
+                  <AvatarImage src={`http://localhost:8080${avatarUrl}`} />
+                ) : (
+                  <AvatarFallback>{username?.charAt(0)}</AvatarFallback>
+                )}
+              </Avatar>
+
+              <span className="text-white">{username}</span>
+
+              <Button variant="secondary">
+                <Link to="/profile">Profil</Link>
+              </Button>
+
+              <Button variant="destructive" onClick={handleLogout}>
+                Déconnexion
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
     </nav>
   );

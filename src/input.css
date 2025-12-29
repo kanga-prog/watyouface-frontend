@@ -1,19 +1,26 @@
-
+/* ============================= */
+/* 1️⃣ Imports externes */
 @import "tw-animate-css";
 
-@plugin "tailwindcss-animate";
-
-@custom-variant dark (&:is(.dark *));
-
+/* ============================= */
+/* 2️⃣ Directives Tailwind obligatoires */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ============================= */
+/* 3️⃣ Plugins et custom variants */
+@plugin "tailwindcss-animate";
+@custom-variant dark (&:is(.dark *));
+
+/* ============================= */
+/* 4️⃣ Variables de thème inline */
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -47,6 +54,8 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* ============================= */
+/* 5️⃣ Valeurs par défaut root */
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);
@@ -82,6 +91,8 @@
   --sidebar-ring: oklch(0.704 0.04 256.788);
 }
 
+/* ============================= */
+/* 6️⃣ Variables dark mode */
 .dark {
   --background: oklch(0.129 0.042 264.695);
   --foreground: oklch(0.984 0.003 247.858);
@@ -116,6 +127,8 @@
   --sidebar-ring: oklch(0.551 0.027 264.364);
 }
 
+/* ============================= */
+/* 7️⃣ Base layer */
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../utils/api";
+
 import CreatePostForm from "../components/post/CreatePostForm";
 import PostCard from "../components/post/PostCard";
 import ChatList from "../components/chat/ChatList";
@@ -13,11 +14,36 @@ export default function Home() {
   const [jwtToken, setJwtToken] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [conversations, setConversations] = useState([]);
-  const [allUsers, setAllUsers] = useState([]);
+  const [allUsers, setAllUsers] = useState([]); // <- ici
   const [selectedConvId, setSelectedConvId] = useState(null);
 
   const navigate = useNavigate();
 
+  // ---------------------------------------------
+  // Créer ou récupérer une conversation
+  // ---------------------------------------------
+  async function getOrCreateConversation(userId) {
+    try {
+      const conv = await api.getOrCreateConversation(userId);
+      console.log("Conversation trouvée ou créée →", conv);
+      setSelectedConvId(conv.id);
+      return conv;
+    } catch (err) {
+      console.error("Erreur dans getOrCreateConversation:", err);
+    }
+  }
+
+
+  // ---------------------------------------------
+  // LOG selectedConvId
+  // ---------------------------------------------
+  useEffect(() => {
+    console.log("🟡 selectedConvId → UPDATED =", selectedConvId);
+  }, [selectedConvId]);
+
+  // ---------------------------------------------
+  // Charger profil
+  // ---------------------------------------------
   const loadUser = async () => {
     try {
       const data = await api.getProfile();
@@ -27,10 +53,40 @@ export default function Home() {
     }
   };
 
+  // ---------------------------------------------
+  // Charger conversations
+  // ---------------------------------------------
+  const loadConversations = async () => {
+    try {
+      const data = await api.getConversations();
+      setConversations(data.content || []);
+    } catch (err) {
+      console.error("Erreur conversations:", err);
+      setConversations([]);
+    }
+  };
+
+  // ---------------------------------------------
+  // Charger utilisateurs
+  // ---------------------------------------------
+  const loadUsers = async () => {
+    try {
+      const data = await api.getUsers();
+      setAllUsers(data); // <- ici
+    } catch (err) {
+      console.error("Erreur chargement users:", err);
+      setAllUsers([]);
+    }
+  };
+
+  // ---------------------------------------------
+  // Charger posts
+  // ---------------------------------------------
   const loadPosts = async () => {
     const token = localStorage.getItem("token");
     if (!token) return navigate("/login");
     setJwtToken(token);
+
     try {
       const res = await api.getPosts();
       const data = await res.json();
@@ -43,27 +99,40 @@ export default function Home() {
     }
   };
 
+  // ---------------------------------------------
+  // Chargement initial
+  // ---------------------------------------------
   useEffect(() => {
     loadUser();
+    loadUsers();
     loadPosts();
+    loadConversations();
   }, []);
 
   return (
-    <div className="flex w-full min-h-screen bg-gray-50">
-      {/* 🟢 Messagerie gauche */}
-      <aside className="w-80 bg-white border-r flex flex-col">
+    <div className="pt-20 flex w-full min-h-screen bg-gray-50">
+
+      {/* 🟢 COLONNE GAUCHE : CHAT LIST */}
+      <aside className="w-72 bg-white border-r flex flex-col overflow-hidden">
         <h2 className="font-bold text-xl p-4 border-b">💬 Chat</h2>
+
         <div className="flex-1 overflow-y-auto">
           <ChatList
             conversations={conversations}
-            users={allUsers}
+            users={allUsers} // <- corrigé
             selectedConvId={selectedConvId}
-            onSelect={(id) => setSelectedConvId(id)}
-            onAvatarClick={() => {}}
+            onSelect={setSelectedConvId}
+            onAvatarClick={getOrCreateConversation}
             currentUserId={currentUser?.id}
           />
         </div>
-        <div className="flex-1 flex flex-col bg-gray-50">
+      </aside>
+
+      {/* 🟡 CENTRE : CHAT WINDOW + FEED */}
+      <main className="flex-1 flex flex-col p-4 space-y-4 max-w-3xl mx-auto">
+
+        {/* CHATWINDOW */}
+        <div className="w-full bg-white border rounded-lg shadow-sm h-[350px] overflow-hidden">
           {jwtToken && selectedConvId ? (
             <ChatWindow
               convId={selectedConvId}
@@ -71,29 +140,27 @@ export default function Home() {
               username={currentUser?.username}
             />
           ) : (
-            <div className="flex items-center justify-center flex-1 text-gray-400">
+            <div className="flex items-center justify-center h-full text-gray-400">
               Sélectionnez une conversation
             </div>
           )}
         </div>
-      </aside>
 
-      {/* 🟡 Feed central */}
-      <main className="flex-1 max-w-2xl mx-auto p-4 space-y-4">
+        {/* FORMULAIRE POST */}
         <CreatePostForm onPostCreated={loadPosts} />
+
+        {/* POSTS */}
         {loading ? (
           <p className="text-center">Chargement...</p>
         ) : posts.length === 0 ? (
-          <p className="text-center">Aucun post</p>
+          <p className="text-center text-gray-500">Aucun post</p>
         ) : (
-          posts.map((post) => (
-            <PostCard key={post.id} post={post} />
-          ))
+          posts.map((post) => <PostCard key={post.id} post={post} />)
         )}
       </main>
 
-      {/* 🔵 Marketplace droite */}
-      <aside className="w-96 bg-white border-l">
+      {/* 🔵 COLONNE DROITE : MARKETPLACE */}
+      <aside className="w-96 bg-white border-l overflow-y-auto">
         <MarketplaceSidebar />
       </aside>
     </div>

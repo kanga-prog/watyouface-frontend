@@ -1,4 +1,3 @@
-// src/components/post/CreatePostForm.jsx
 import { useState, useRef } from "react";
 import { api } from "../../utils/api";
 import { Button } from "../ui/button";
@@ -14,10 +13,15 @@ export default function CreatePostForm({ onPostCreated }) {
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
-    if (!selectedFile.type.startsWith("image/") && !selectedFile.type.startsWith("video/")) {
+
+    if (
+      !selectedFile.type.startsWith("image/") &&
+      !selectedFile.type.startsWith("video/")
+    ) {
       alert("Veuillez sélectionner une image ou une vidéo.");
       return;
     }
+
     setFile(selectedFile);
 
     const reader = new FileReader();
@@ -36,26 +40,26 @@ export default function CreatePostForm({ onPostCreated }) {
     if (!content.trim() && !file) return;
 
     setIsSubmitting(true);
+
     const formData = new FormData();
     if (content) formData.append("content", content);
     if (file) formData.append("file", file);
 
     try {
-      const token = api.getToken();
-      const res = await fetch("http://localhost:8080/api/posts", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
+      const res = await api.createPost(formData);
 
-      if (res.ok) {
-        setContent("");
-        removeFile();
-        onPostCreated();
-      } else {
+      if (!res.ok) {
         const error = await res.text();
         alert("Échec de la publication : " + error);
+        return;
       }
+
+      // Reset
+      setContent("");
+      removeFile();
+
+      if (onPostCreated) onPostCreated();
+
     } catch (err) {
       alert("Erreur réseau : " + err.message);
     } finally {
@@ -75,10 +79,15 @@ export default function CreatePostForm({ onPostCreated }) {
       {preview && (
         <div className="mt-3 relative inline-block">
           {file.type.startsWith("image/") ? (
-            <img src={preview} alt="Preview" className="max-h-64 rounded-lg object-contain" />
+            <img
+              src={preview}
+              alt="Preview"
+              className="max-h-64 rounded-lg object-contain"
+            />
           ) : (
             <video src={preview} controls className="max-h-64 rounded-lg" />
           )}
+
           <Button
             type="button"
             onClick={removeFile}

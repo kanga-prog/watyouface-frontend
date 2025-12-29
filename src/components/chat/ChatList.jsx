@@ -26,8 +26,13 @@ export default function ChatList({
         return (
           <div
             key={conv.id}
-            onClick={() => onSelect(conv.id)}
-            className={`relative flex items-center p-2 cursor-pointer rounded-lg mb-1 transition ${selectedConvId === conv.id ? "bg-blue-100" : "hover:bg-gray-100"}`}
+            onClick={() => {
+              console.log("Conversation cliquée →", conv.id); // 🔵 Log au clic
+              onSelect(conv.id);
+            }}
+            className={`relative flex items-center p-2 cursor-pointer rounded-lg mb-1 transition ${
+              selectedConvId === conv.id ? "bg-blue-100" : "hover:bg-gray-100"
+            }`}
           >
             {!isGroup ? (
               <img
@@ -36,7 +41,8 @@ export default function ChatList({
                 className="w-10 h-10 rounded-full mr-3 object-cover cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onAvatarClick?.(otherUser);
+                  // ⚡ Passer uniquement l'ID de l'utilisateur
+                  if (otherUser?.id) onAvatarClick?.(otherUser.id);
                 }}
                 onError={(e) =>
                   (e.target.src = "http://localhost:8080/uploads/avatars/default.png")
@@ -48,7 +54,10 @@ export default function ChatList({
 
             <div className="flex-1 min-w-0">
               <p className="font-medium truncate">
-                {isGroup ? conv.name : otherUser?.username?.charAt(0).toUpperCase() + otherUser?.username?.slice(1)}
+                {isGroup
+                  ? conv.name
+                  : otherUser?.username?.charAt(0).toUpperCase() +
+                    otherUser?.username?.slice(1)}
               </p>
               <p className="text-xs text-gray-500 truncate">
                 {conv.lastMessage || "Aucun message"}
@@ -70,14 +79,19 @@ export default function ChatList({
             <div
               key={user.id}
               className="flex items-center p-2 rounded-lg cursor-pointer hover:bg-gray-100 mb-1"
-              onClick={() => onAvatarClick(user)}
+              onClick={() => {
+                console.log("Nouvel utilisateur cliqué →", user.id); // 🔵 Log au clic
+                onAvatarClick(user.id); // ⚡ Passer uniquement l'ID
+              }}
             >
               <img
                 src={buildAvatarUrl(user.avatarUrl)}
                 alt="avatar"
                 className="w-10 h-10 rounded-full mr-3 object-cover"
               />
-              <p className="font-medium truncate">{user.username?.charAt(0).toUpperCase() + user.username?.slice(1)}</p>
+              <p className="font-medium truncate">
+                {user.username?.charAt(0).toUpperCase() + user.username?.slice(1)}
+              </p>
             </div>
           ))}
         </>

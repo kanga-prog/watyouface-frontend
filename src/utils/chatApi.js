@@ -4,7 +4,7 @@ import { Client } from "@stomp/stompjs";
 const WS_URL = import.meta.env.VITE_WS_URL || "http://localhost:8080/ws";
 
 let client = null;
-const subscriptions = {}; // garder trace des souscriptions
+const subscriptions = {};
 
 /**
  * Connexion STOMP via SockJS + JWT
@@ -17,21 +17,24 @@ export function connect(jwtToken, onConnect) {
   }
 
   client = new Client({
-    brokerURL: undefined, // SockJS utilisée
+    brokerURL: undefined,     // SockJS obligatoire → pas d’URL direct
     webSocketFactory: () => new SockJS(WS_URL),
+
+    // 🟢 Le token DOIT être envoyé ici, pas dans l’URL
     connectHeaders: {
       Authorization: `Bearer ${jwtToken}`,
     },
+
     debug: (str) => console.log("📡 STOMP:", str),
-    reconnectDelay: 5000, // reconnect auto
+    reconnectDelay: 5000,
 
     onConnect: (frame) => {
       console.log("✅ WS connecté au serveur", WS_URL);
-      if (onConnect) onConnect(client); // <- onConnect reçoit client actif
+      if (onConnect) onConnect(client);
     },
 
     onStompError: (frame) => {
-      console.error("❌ Erreur STOMP:", frame.headers['message']);
+      console.error("❌ Erreur STOMP:", frame.headers["message"]);
     },
 
     onWebSocketError: (err) => {
@@ -45,17 +48,16 @@ export function connect(jwtToken, onConnect) {
 }
 
 /**
- * S’abonner à une conversation (après connexion)
+ * S’abonner à une conversation
  */
 export function subscribe(convId, handler) {
   if (!client || !client.connected) {
-    console.warn("⚠️ Client STOMP non encore connecté, attente...");
+    console.warn("⚠️ Client STOMP non connecté, attente...");
     return;
   }
 
   const topic = `/topic/conversations/${convId}`;
 
-  // Évite double abonnement
   if (subscriptions[topic]) {
     console.log(`↩️ Déjà abonné à ${topic}`);
     return subscriptions[topic];
