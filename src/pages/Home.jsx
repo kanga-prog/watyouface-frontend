@@ -106,39 +106,13 @@ export default function Home() {
 
   return (
     <div className="pt-20 flex w-full min-h-screen bg-gray-50">
-
-      {/* SIDEBAR GAUCHE */}
-      <aside className="w-72 min-w-[18rem] bg-white border-r flex flex-col">
-        <h2 className="font-bold text-xl p-4 border-b">💬 Chat</h2>
-        <div className="flex-1 overflow-y-auto">
-          <ChatList
-            conversations={conversations}
-            users={allUsers}
-            selectedConvId={selectedConvId}
-            onSelect={setSelectedConvId}
-            onAvatarClick={getOrCreateConversation}
-            currentUserId={currentUser?.id}
-          />
-        </div>
+      {/* SIDEBAR GAUCHE : Marketplace */}
+      <aside className="w-96 bg-white border-r overflow-y-auto">
+        <MarketplaceSidebar />
       </aside>
 
-      {/* CENTRE CHAT + FEED */}
+      {/* CENTRE : FEED uniquement */}
       <main className="flex-1 flex flex-col p-4 space-y-4">
-        {/* Chat Window */}
-        <div className="w-full bg-white border rounded-lg shadow-sm h-[400px] overflow-hidden">
-          {jwtToken && selectedConvId ? (
-            <ChatWindow
-              convId={selectedConvId}
-              jwtToken={jwtToken}
-              username={currentUser?.username}
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full text-gray-400">
-              Sélectionnez une conversation
-            </div>
-          )}
-        </div>
-
         {/* Formulaire Post */}
         <CreatePostForm onPostCreated={loadPosts} />
 
@@ -152,9 +126,39 @@ export default function Home() {
         )}
       </main>
 
-      {/* SIDEBAR DROITE : Marketplace */}
-      <aside className="w-96 bg-white border-l overflow-y-auto">
-        <MarketplaceSidebar />
+      {/* SIDEBAR DROITE : Chat List + Chat Window */}
+      <aside className="w-96 bg-white border-l flex flex-col overflow-hidden">
+        {/* Chat List */}
+        <div className="border-b p-4 bg-gray-50">
+          <h2 className="font-bold text-xl">💬 Chat</h2>
+        </div>
+
+        {/* Chat List avec scroll */}
+        <div className="h-[200px] overflow-y-auto border-b">
+          <ChatList
+            conversations={conversations}
+            users={allUsers}
+            selectedConvId={selectedConvId}
+            onSelect={setSelectedConvId}
+            onAvatarClick={getOrCreateConversation}
+            currentUserId={currentUser?.id}
+          />
+        </div>
+
+        {/* Chat Window */}
+        <div className="flex-1 flex flex-col">
+          {jwtToken && selectedConvId ? (
+            <ChatWindow
+              convId={selectedConvId}
+              jwtToken={jwtToken}
+              username={currentUser?.username}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-400">
+              <p className="text-center p-4">Sélectionnez une conversation</p>
+            </div>
+          )}
+        </div>
       </aside>
     </div>
   );
