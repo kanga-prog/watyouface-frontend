@@ -81,7 +81,6 @@ export default function Home() {
   const getOrCreateConversation = async (userId) => {
     try {
       const conv = await api.getOrCreateConversation(userId);
-      console.log("Conversation trouvée ou créée →", conv);
 
       setConversations((prev) => {
         const exists = prev.some((c) => c.id === conv.id);
@@ -105,31 +104,42 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="pt-20 flex w-full min-h-screen bg-gray-50">
+    <div className="pt-20 flex w-full h-screen bg-gray-50 overflow-hidden">
       {/* SIDEBAR GAUCHE : Marketplace */}
-      <aside className="w-96 bg-white border-r overflow-y-auto">
-        <MarketplaceSidebar />
+      <aside className="w-96 h-full bg-white border-r flex flex-col">
+        {/* Header fixe */}
+        <div className="p-4 border-b font-bold shrink-0">
+          🛒 Marketplace
+        </div>
+
+        {/* Contenu scrollable */}
+        <div className="flex-1 overflow-y-auto">
+          <MarketplaceSidebar />
+        </div>
       </aside>
 
-      {/* CENTRE : FEED uniquement */}
-      <main className="flex-1 flex flex-col p-4 space-y-4">
-        {/* Formulaire Post */}
-        <CreatePostForm onPostCreated={loadPosts} />
+      {/* CENTRE : FEED */}
+      <main className="flex-1 h-full flex flex-col bg-gray-50">
+        {/* Feed scrollable */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <CreatePostForm onPostCreated={loadPosts} />
 
-        {/* Posts */}
-        {loading ? (
-          <p className="text-center">Chargement...</p>
-        ) : posts.length === 0 ? (
-          <p className="text-center text-gray-500">Aucun post</p>
-        ) : (
-          posts.map((post) => <PostCard key={post.id} post={post} />)
-        )}
+          {loading ? (
+            <p className="text-center">Chargement...</p>
+          ) : posts.length === 0 ? (
+            <p className="text-center text-gray-500">Aucun post</p>
+          ) : (
+            posts.map((post) => (
+              <PostCard key={post.id} post={post} />
+            ))
+          )}
+        </div>
       </main>
 
       {/* SIDEBAR DROITE : Chat List + Chat Window */}
       <aside className="w-96 bg-white border-l flex flex-col overflow-hidden">
         {/* Chat List */}
-        <div className="border-b p-4 bg-gray-50">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
           <h2 className="font-bold text-xl">💬 Chat</h2>
         </div>
 
@@ -146,7 +156,7 @@ export default function Home() {
         </div>
 
         {/* Chat Window */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {jwtToken && selectedConvId ? (
             <ChatWindow
               convId={selectedConvId}

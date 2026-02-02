@@ -35,11 +35,8 @@ export default function ChatList({
         return (
           <div
             key={conv.id}
-            onClick={() => {
-              console.log("Conversation cliquée →", conv.id);
-              onSelect(conv.id);
-            }}
-            className={`relative flex items-center p-2 cursor-pointer rounded-lg mb-1 transition ${
+            onClick={() => onSelect(conv.id)}
+            className={`flex items-center gap-3 p-2 cursor-pointer rounded-lg mb-1 transition ${
               selectedConvId === conv.id
                 ? "bg-blue-100"
                 : "hover:bg-gray-100"
@@ -49,23 +46,22 @@ export default function ChatList({
               <img
                 src={buildAvatarUrl(otherUser?.avatarUrl)}
                 alt="avatar"
-                className="w-10 h-10 rounded-full mr-3 object-cover"
+                className="w-9 h-9 rounded-full object-cover shrink-0"
                 onError={(e) =>
                   (e.target.src =
                     "http://localhost:8080/uploads/avatars/default.png")
                 }
               />
             ) : (
-              <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center mr-3">
+              <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
                 👥
               </div>
             )}
 
-            <div className="flex-1 min-w-0">
-              <p className="font-medium truncate">
+            <div className="min-w-0 flex-1">
+              <p className="font-medium text-sm truncate">
                 {displayName}
               </p>
-
               <p className="text-xs text-gray-500 truncate">
                 {conv.lastMessage || "Aucun message"}
               </p>
@@ -78,22 +74,22 @@ export default function ChatList({
       {users.length > 0 && (
         <>
           <hr className="my-2" />
-          <p className="text-xs text-gray-400 uppercase px-2">
+          <p className="text-xs text-gray-400 uppercase px-2 mb-1">
             👥 Nouveaux chats
           </p>
 
           {users.map((user) => (
             <div
               key={user.id}
-              className="flex items-center p-2 rounded-lg cursor-pointer hover:bg-gray-100 mb-1"
               onClick={() => onAvatarClick(user.id)}
+              className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-gray-100 mb-1"
             >
               <img
                 src={buildAvatarUrl(user.avatarUrl)}
                 alt="avatar"
-                className="w-10 h-10 rounded-full mr-3 object-cover"
+                className="w-9 h-9 rounded-full object-cover shrink-0"
               />
-              <p className="font-medium truncate">
+              <p className="font-medium text-sm truncate">
                 {user.username}
               </p>
             </div>

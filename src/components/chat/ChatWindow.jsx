@@ -113,7 +113,7 @@ export default function ChatWindow({ convId, jwtToken, username }) {
                   <img
                     src={avatarUrl}
                     alt="avatar"
-                    className="w-8 h-8 rounded-full mr-2 object-cover border border-gray-300"
+                    className="w-8 h-8 rounded-full object-cover border border-gray-300 shrink-0"
                   />
                 )}
 
@@ -144,7 +144,7 @@ export default function ChatWindow({ convId, jwtToken, username }) {
                   <img
                     src={avatarUrl}
                     alt="avatar"
-                    className="w-8 h-8 rounded-full ml-2 object-cover border border-gray-300"
+                    className="w-8 h-8 rounded-full object-cover border border-gray-300 shrink-0"
                   />
                 )}
               </div>
