@@ -21,12 +21,10 @@ export default function Home() {
 
   const navigate = useNavigate();
 
-  /* DEBUG selectedConvId */
   useEffect(() => {
     console.log("🟡 selectedConvId → UPDATED =", selectedConvId);
   }, [selectedConvId]);
 
-  /* PROFIL */
   const loadUser = async () => {
     try {
       const data = await api.getProfile();
@@ -36,7 +34,6 @@ export default function Home() {
     }
   };
 
-  /* CONVERSATIONS */
   const loadConversations = async () => {
     try {
       const data = await api.getConversations();
@@ -47,7 +44,6 @@ export default function Home() {
     }
   };
 
-  /* UTILISATEURS */
   const loadUsers = async () => {
     try {
       const data = await api.getUsers();
@@ -58,7 +54,6 @@ export default function Home() {
     }
   };
 
-  /* POSTS */
   const loadPosts = async () => {
     const token = localStorage.getItem("token");
     if (!token) return navigate("/login");
@@ -77,7 +72,6 @@ export default function Home() {
     }
   };
 
-  /* CRÉER / RÉCUPÉRER CONVERSATION */
   const getOrCreateConversation = async (userId) => {
     try {
       const conv = await api.getOrCreateConversation(userId);
@@ -95,7 +89,6 @@ export default function Home() {
     }
   };
 
-  /* CHARGEMENT INITIAL */
   useEffect(() => {
     loadUser();
     loadUsers();
@@ -107,12 +100,7 @@ export default function Home() {
     <div className="pt-20 flex w-full h-screen bg-gray-50 overflow-hidden">
       {/* SIDEBAR GAUCHE : Marketplace */}
       <aside className="w-96 h-full bg-white border-r flex flex-col">
-        {/* Header fixe */}
-        <div className="p-4 border-b font-bold shrink-0">
-          🛒 Marketplace
-        </div>
-
-        {/* Contenu scrollable */}
+        <div className="p-4 border-b font-bold shrink-0">🛒 Marketplace</div>
         <div className="flex-1 overflow-y-auto">
           <MarketplaceSidebar />
         </div>
@@ -120,30 +108,24 @@ export default function Home() {
 
       {/* CENTRE : FEED */}
       <main className="flex-1 h-full flex flex-col bg-gray-50">
-        {/* Feed scrollable */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           <CreatePostForm onPostCreated={loadPosts} />
-
           {loading ? (
             <p className="text-center">Chargement...</p>
           ) : posts.length === 0 ? (
             <p className="text-center text-gray-500">Aucun post</p>
           ) : (
-            posts.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))
+            posts.map((post) => <PostCard key={post.id} post={post} />)
           )}
         </div>
       </main>
 
       {/* SIDEBAR DROITE : Chat List + Chat Window */}
       <aside className="w-96 bg-white border-l flex flex-col overflow-hidden">
-        {/* Chat List */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          <h2 className="font-bold text-xl">💬 Chat</h2>
+          <h2 className="font-bold text-xl">💬 Chat WatYouFace 🎭</h2>
         </div>
 
-        {/* Chat List avec scroll */}
         <div className="h-[200px] overflow-y-auto border-b">
           <ChatList
             conversations={conversations}
@@ -155,7 +137,6 @@ export default function Home() {
           />
         </div>
 
-        {/* Chat Window */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {jwtToken && selectedConvId ? (
             <ChatWindow

@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState } from "react"; 
 import { api } from "../../utils/api";
-import { Avatar } from "../ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
 import { Button } from "../ui/button";
 
 export default function AvatarUpload({ onUpload, currentAvatarUrl }) {
@@ -17,13 +17,10 @@ export default function AvatarUpload({ onUpload, currentAvatarUrl }) {
     try {
       const res = await api.uploadAvatar(file);
       const data = await res.json();
-
       if (res.ok) {
         alert("✅ Avatar mis à jour !");
-        if (onUpload) onUpload(data.avatarUrl);
-      } else {
-        alert("❌ Erreur : " + data.message);
-      }
+        onUpload?.(data.avatarUrl);
+      } else alert("❌ Erreur : " + data.message);
     } catch (err) {
       console.error(err);
       alert("❌ Erreur réseau");
@@ -34,12 +31,9 @@ export default function AvatarUpload({ onUpload, currentAvatarUrl }) {
 
   return (
     <div className="flex flex-col items-center space-y-3">
-      <Avatar className="w-24 h-24">
-        <img
-          src={preview || "http://localhost:8080/uploads/avatars/default.png"}
-          alt="Avatar"
-          className="object-cover w-full h-full rounded-full"
-        />
+      <Avatar size="xs">
+        <AvatarImage src={preview || "http://localhost:8080/uploads/avatars/default.png"} />
+        <AvatarFallback>👤</AvatarFallback>
       </Avatar>
 
       <label>
