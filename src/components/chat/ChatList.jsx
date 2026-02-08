@@ -2,6 +2,8 @@ import React from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
 import { mediaUrl, defaultAvatar } from "../../utils/media";
 
+const avatarSrc = (url) => (url ? mediaUrl(url) : defaultAvatar);
+
 export default function ChatList({
   conversations = [],
   users = [],
@@ -14,7 +16,10 @@ export default function ChatList({
     <div className="flex flex-col">
       {conversations.map((conv) => {
         const isGroup = conv.group || conv.isGroup;
-        const participants = Array.isArray(conv.participants) ? conv.participants : [];
+        const participants = Array.isArray(conv.participants)
+          ? conv.participants
+          : [];
+
         const otherUser = !isGroup
           ? participants.find((u) => u.id !== currentUserId)
           : null;
@@ -28,18 +33,18 @@ export default function ChatList({
             key={conv.id}
             onClick={() => onSelect(conv.id)}
             className={`flex items-center gap-3 p-2 cursor-pointer rounded-lg mb-1 transition ${
-              selectedConvId === conv.id ? "bg-blue-100" : "hover:bg-gray-100"
+              selectedConvId === conv.id
+                ? "bg-blue-100"
+                : "hover:bg-gray-100"
             }`}
           >
             {!isGroup ? (
-              <Avatar className="w-2 h-2">
-                <AvatarImage
-                  src={otherUser?.avatarUrl ? mediaUrl((otherUser.avatarUrl ? mediaUrl(otherUser.avatarUrl) : defaultAvatar)) : defaultAvatar}
-                />
+              <Avatar className="w-8 h-8">
+                <AvatarImage src={avatarSrc(otherUser?.avatarUrl)} />
                 <AvatarFallback>👤</AvatarFallback>
               </Avatar>
             ) : (
-              <div className="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
                 👥
               </div>
             )}
@@ -67,8 +72,8 @@ export default function ChatList({
               onClick={() => onAvatarClick(user.id)}
               className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-gray-100 mb-1"
             >
-              <Avatar className="w-2 h-2">
-                <AvatarImage src={(user.avatarUrl ? mediaUrl(user.avatarUrl) : defaultAvatar) ? mediaUrl((user.avatarUrl ? mediaUrl(user.avatarUrl) : defaultAvatar)) : defaultAvatar} />
+              <Avatar className="w-8 h-8">
+                <AvatarImage src={avatarSrc(user.avatarUrl)} />
                 <AvatarFallback>👤</AvatarFallback>
               </Avatar>
               <p className="font-medium text-sm truncate">{user.username}</p>

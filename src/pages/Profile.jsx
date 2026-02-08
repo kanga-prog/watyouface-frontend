@@ -4,26 +4,45 @@ import AvatarUpload from "../components/profile/AvatarUpload";
 import { api } from "../utils/api";
 import { mediaUrl, defaultAvatar } from "../utils/media";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
+import { Button } from "../components/ui/button";
 
 export default function Profile() {
   const [user, setUser] = useState(null);
+
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [newUsername, setNewUsername] = useState("");
+
+  const [bio, setBio] = useState("");
+  const [editingBio, setEditingBio] = useState(false);
+
+  const [links, setLinks] = useState({ github: "", linkedin: "" });
+
   const [activeContractId, setActiveContractId] = useState(null);
   const [loadingContract, setLoadingContract] = useState(true);
   const [downloading, setDownloading] = useState(false);
-  const [editingUsername, setEditingUsername] = useState(false);
-  const [newUsername, setNewUsername] = useState("");
+
+  const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
 
+  const avatarSrc = (url) => (url ? mediaUrl(url) : defaultAvatar);
+
+  /* ===== LOAD PROFILE ===== */
   useEffect(() => {
     api
       .getProfile()
       .then((data) => {
         setUser(data);
         setNewUsername(data.username);
+        setBio(data.bio || "");
+        setLinks({
+          github: data.github || "",
+          linkedin: data.linkedin || "",
+        });
       })
       .catch(() => navigate("/login"));
   }, [navigate]);
 
+  /* ===== CONTRACT ===== */
   useEffect(() => {
     if (!user) return;
     api
@@ -33,28 +52,23 @@ export default function Profile() {
       .finally(() => setLoadingContract(false));
   }, [user]);
 
-  const handleDownloadContract = async () => {
-    setDownloading(true);
-    try {
-      const res = await api.downloadContract(activeContractId);
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "WatYouFace_Contract.pdf";
-      a.click();
-      URL.revokeObjectURL(url);
-    } finally {
-      setDownloading(false);
-    }
-  };
+  /* ===== ACTIONS ===== */
 
   const handleUsernameUpdate = async () => {
+    setSaving(true);
     const res = await api.updateUsername(newUsername);
     if (res.ok) {
       setUser((u) => ({ ...u, username: newUsername }));
       setEditingUsername(false);
     }
+    setSaving(false);
+  };
+
+  const handleProfileSave = async () => {
+    setSaving(true);
+    await api.updateProfile({ bio, ...links });
+    setEditingBio(false);
+    setSaving(false);
   };
 
   const handleAvatarUpload = (avatarUrl) => {
@@ -62,72 +76,153 @@ export default function Profile() {
     localStorage.setItem("avatarUrl", avatarUrl);
   };
 
+  const handleDownloadContract = async () => {
+    setDownloading(true);
+    const res = await api.downloadContract(activeContractId);
+    const blob = await res.blob();
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "WatYouFace_Contract.pdf";
+    a.click();
+
+    URL.revokeObjectURL(url);
+    setDownloading(false);
+  };
+
   if (!user) return null;
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-3xl mx-auto space-y-6">
-        <h1 className="text-3xl font-bold text-center">
-          👋 Bienvenue, {user.username}
-        </h1>
 
-        {/* Section Avatar + username */}
-        <div className="bg-white p-6 rounded shadow flex gap-6">
+        {/* ===== HEADER PROFIL ===== */}
+        <section className="bg-white p-6 rounded shadow flex gap-6 items-center">
+          <Avatar className="w-24 h-24 ring-4 ring-blue-500/20">
+            <AvatarImage src={avatarSrc(user.avatarUrl)} />
+            <AvatarFallback>
+              {user.username?.[0]?.toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+
+          <div className="flex-1 space-y-1">
+            <h2 className="text-2xl font-bold">{user.username}</h2>
+            <p className="text-sm text-gray-500">{user.email}</p>
+
+            <p className="text-gray-700 text-sm">
+              {bio || "Ajoutez une courte biographie"}
+            </p>
+
+            <div className="flex gap-4 text-sm text-blue-600">
+              {links.github && (
+                <a href={links.github} target="_blank">GitHub</a>
+              )}
+              {links.linkedin && (
+                <a href={links.linkedin} target="_blank">LinkedIn</a>
+              )}
+            </div>
+          </div>
+
           <AvatarUpload
-            currentAvatarUrl={(user.avatarUrl ? mediaUrl(user.avatarUrl) : defaultAvatar) ? mediaUrl((user.avatarUrl ? mediaUrl(user.avatarUrl) : defaultAvatar)) : defaultAvatar}
+            currentAvatarUrl={user.avatarUrl}
             onUpload={handleAvatarUpload}
           />
+        </section>
 
-          <div>
-            {editingUsername ? (
-              <div className="flex gap-2">
-                <input
-                  value={newUsername}
-                  onChange={(e) => setNewUsername(e.target.value)}
-                  className="border px-2"
-                />
-                <button onClick={handleUsernameUpdate}>✅</button>
-                <button onClick={() => setEditingUsername(false)}>❌</button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setEditingUsername(true)}
-                className="text-blue-600"
-              >
-                ✏️ Modifier
-              </button>
-            )}
-            <p>{user.email}</p>
-          </div>
-        </div>
+        {/* ===== IDENTITÉ ===== */}
+        <section className="bg-white p-6 rounded shadow space-y-4">
+          <h2 className="text-xl font-semibold">👤 Identité</h2>
 
-        {/* Contrat */}
-        <div className="bg-white p-6 rounded shadow">
-          {loadingContract ? (
-            <p>Chargement du contrat…</p>
-          ) : activeContractId ? (
-            <button
-              onClick={handleDownloadContract}
-              disabled={downloading}
-              className="bg-blue-600 text-white px-4 py-2 rounded"
+          {editingUsername ? (
+            <div className="flex gap-2">
+              <input
+                value={newUsername}
+                onChange={(e) => setNewUsername(e.target.value)}
+                className="border px-2 py-1 rounded"
+              />
+              <Button size="sm" onClick={handleUsernameUpdate} disabled={saving}>
+                💾
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setEditingUsername(false)}>
+                ❌
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setEditingUsername(true)}
             >
-              📄 Télécharger le contrat
-            </button>
+              ✏️ Modifier le pseudo
+            </Button>
+          )}
+        </section>
+
+        {/* ===== BIO ===== */}
+        <section className="bg-white p-6 rounded shadow space-y-3">
+          <h2 className="text-xl font-semibold">📝 À propos</h2>
+
+          {editingBio ? (
+            <>
+              <textarea
+                className="w-full border p-2 rounded"
+                rows={3}
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+              />
+              <Button size="sm" onClick={handleProfileSave} disabled={saving}>
+                💾 Sauvegarder
+              </Button>
+            </>
+          ) : (
+            <>
+              <p>{bio || "Aucune biographie."}</p>
+              <Button variant="ghost" size="sm" onClick={() => setEditingBio(true)}>
+                ✏️ Modifier
+              </Button>
+            </>
+          )}
+        </section>
+
+        {/* ===== LIENS ===== */}
+        <section className="bg-white p-6 rounded shadow space-y-3">
+          <h2 className="text-xl font-semibold">🌐 Liens</h2>
+
+          <input
+            placeholder="GitHub"
+            className="border p-2 w-full rounded"
+            value={links.github}
+            onChange={(e) => setLinks({ ...links, github: e.target.value })}
+          />
+
+          <input
+            placeholder="LinkedIn"
+            className="border p-2 w-full rounded"
+            value={links.linkedin}
+            onChange={(e) => setLinks({ ...links, linkedin: e.target.value })}
+          />
+
+          <Button size="sm" onClick={handleProfileSave} disabled={saving}>
+            💾 Sauvegarder
+          </Button>
+        </section>
+
+        {/* ===== DOCUMENTS ===== */}
+        <section className="bg-white p-6 rounded shadow space-y-3">
+          <h2 className="text-xl font-semibold">📄 Documents</h2>
+
+          {loadingContract ? (
+            <p>Chargement…</p>
+          ) : activeContractId ? (
+            <Button onClick={handleDownloadContract} disabled={downloading}>
+              📥 Télécharger le contrat
+            </Button>
           ) : (
             <p className="text-red-600">Aucun contrat actif</p>
           )}
-        </div>
+        </section>
 
-        {/* Avatar central */}
-        <div className="bg-white p-6 rounded shadow text-center">
-          <Avatar className="w-16 h-16 mx-auto">
-            <AvatarImage src={(user.avatarUrl ? mediaUrl(user.avatarUrl) : defaultAvatar) ? mediaUrl((user.avatarUrl ? mediaUrl(user.avatarUrl) : defaultAvatar)) : defaultAvatar} />
-            <AvatarFallback>
-              {user.username?.[0].toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <p className="font-semibold mt-2">{user.username}</p>
-        </div>
       </div>
     </div>
   );

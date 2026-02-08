@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../utils/api";
-import { mediaUrl, defaultAvatar } from "../utils/media";
 
 import CreatePostForm from "../components/post/CreatePostForm";
 import PostCard from "../components/post/PostCard";
@@ -22,36 +21,13 @@ export default function Home() {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    console.log("🟡 selectedConvId → UPDATED =", selectedConvId);
-  }, [selectedConvId]);
-
+  /* ===== LOADERS ===== */
   const loadUser = async () => {
     try {
       const data = await api.getProfile();
       setCurrentUser(data);
     } catch {
       navigate("/login");
-    }
-  };
-
-  const loadConversations = async () => {
-    try {
-      const data = await api.getConversations();
-      setConversations(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("Erreur conversations:", err);
-      setConversations([]);
-    }
-  };
-
-  const loadUsers = async () => {
-    try {
-      const data = await api.getUsers();
-      setAllUsers(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("Erreur chargement users:", err);
-      setAllUsers([]);
     }
   };
 
@@ -65,29 +41,40 @@ export default function Home() {
       const res = await api.getPosts();
       const data = await res.json();
       setPosts(Array.isArray(data) ? data : data.content || []);
-    } catch (err) {
-      console.error(err);
+    } catch {
       setPosts([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const getOrCreateConversation = async (userId) => {
+  const loadConversations = async () => {
     try {
-      const conv = await api.getOrCreateConversation(userId);
-
-      setConversations((prev) => {
-        const exists = prev.some((c) => c.id === conv.id);
-        if (exists) return prev;
-        return [conv, ...prev];
-      });
-
-      setSelectedConvId(conv.id);
-      return conv;
-    } catch (err) {
-      console.error("Erreur getOrCreateConversation:", err);
+      const data = await api.getConversations();
+      setConversations(Array.isArray(data) ? data : []);
+    } catch {
+      setConversations([]);
     }
+  };
+
+  const loadUsers = async () => {
+    try {
+      const data = await api.getUsers();
+      setAllUsers(Array.isArray(data) ? data : []);
+    } catch {
+      setAllUsers([]);
+    }
+  };
+
+  const getOrCreateConversation = async (userId) => {
+    const conv = await api.getOrCreateConversation(userId);
+
+    setConversations((prev) => {
+      const exists = prev.some((c) => c.id === conv.id);
+      return exists ? prev : [conv, ...prev];
+    });
+
+    setSelectedConvId(conv.id);
   };
 
   useEffect(() => {
@@ -99,35 +86,43 @@ export default function Home() {
 
   return (
     <div className="pt-20 flex w-full h-screen bg-gray-50 overflow-hidden">
-      {/* SIDEBAR GAUCHE : Marketplace */}
-      <aside className="w-96 h-full bg-white border-r flex flex-col">
-        <div className="p-4 border-b font-bold shrink-0">🛒 Marketplace</div>
+
+      {/* 🛒 MARKETPLACE */}
+      <aside className="w-96 bg-white border-r flex flex-col">
+        <div className="p-4 border-b font-bold shrink-0">
+          🛒 Marketplace
+        </div>
         <div className="flex-1 overflow-y-auto">
           <MarketplaceSidebar />
         </div>
       </aside>
 
-      {/* CENTRE : FEED */}
-      <main className="flex-1 h-full flex flex-col bg-gray-50">
+      {/* 📰 FEED */}
+      <main className="flex-1 flex flex-col bg-gray-50">
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           <CreatePostForm onPostCreated={loadPosts} />
           {loading ? (
-            <p className="text-center">Chargement...</p>
+            <p className="text-center">Chargement…</p>
           ) : posts.length === 0 ? (
             <p className="text-center text-gray-500">Aucun post</p>
           ) : (
-            posts.map((post) => <PostCard key={post.id} post={post} />)
+            posts.map((post) => (
+              <PostCard key={post.id} post={post} />
+            ))
           )}
         </div>
       </main>
 
-      {/* SIDEBAR DROITE : Chat List + Chat Window */}
-      <aside className="w-96 bg-white border-l flex flex-col overflow-hidden">
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          <h2 className="font-bold text-xl">💬 Chat WatYouFace 🎭</h2>
+      {/* 💬 SIDEBAR CHAT */}
+      <aside className="w-96 bg-white border-l flex flex-col h-full">
+
+        {/* HEADER */}
+        <div className="p-4 border-b font-bold shrink-0">
+          💬 Chat
         </div>
 
-        <div className="h-[200px] overflow-y-auto border-b">
+        {/* CHAT LIST */}
+        <div className="flex-[1] overflow-y-auto border-b">
           <ChatList
             conversations={conversations}
             users={allUsers}
@@ -138,7 +133,8 @@ export default function Home() {
           />
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* CHAT WINDOW */}
+        <div className="flex-[2] flex flex-col bg-gray-50">
           {jwtToken && selectedConvId ? (
             <ChatWindow
               convId={selectedConvId}
@@ -147,11 +143,12 @@ export default function Home() {
             />
           ) : (
             <div className="flex items-center justify-center h-full text-gray-400">
-              <p className="text-center p-4">Sélectionnez une conversation</p>
+              Sélectionnez une conversation
             </div>
           )}
         </div>
       </aside>
+
     </div>
   );
 }

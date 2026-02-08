@@ -145,6 +145,23 @@ export const api = {
     });
   },
 
+  updateUsername: (username) =>
+  fetch(`${API_BASE}/api/users/username`, {
+    method: "PUT",
+    headers: api.jsonHeaders(),
+    body: JSON.stringify({ username }),
+  }),
+  getUsers: async () => {
+  const res = await fetch(`${API_BASE}/api/users`, {
+    headers: api.authHeader(),
+  });
+  if (!res.ok) {
+    throw new Error(`Erreur users (${res.status})`);
+  }
+  return res.json();
+},
+
+
   // =========================
   // 📜 CONTRACTS
   // =========================
@@ -157,4 +174,6 @@ export const api = {
     fetch(`${API_BASE}/api/contracts/${id}/download`, {
       headers: api.authHeader(),
     }),
+
+
 };

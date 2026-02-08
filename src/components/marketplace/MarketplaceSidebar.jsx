@@ -1,5 +1,6 @@
 // src/components/marketplace/MarketplaceSidebar.jsx
 import React, { useState } from "react";
+import { mediaUrl, defaultAvatar } from "../../utils/media";
 import {
   Card,
   CardHeader,

@@ -1,6 +1,9 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { mediaUrl, defaultAvatar } from "../../utils/media"; // <-- corrigé
+import { mediaUrl, defaultAvatar } from "../../utils/media"; 
+
+
+const avatarSrc = (url) => (url ? mediaUrl(url) : defaultAvatar);
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -17,15 +20,15 @@ export default function Navbar() {
     <nav className="fixed top-0 w-full bg-blue-700 shadow z-50">
       <div className="flex justify-between items-center px-4 py-2">
         <Link to="/" className="text-white font-bold">
-          WatYouFace
+          WatYouFace🎭
         </Link>
 
         {token && (
           <div className="flex items-center gap-2">
             <Avatar className="w-4 h-4">
-              <AvatarImage src={avatarUrl ? mediaUrl(avatarUrl) : defaultAvatar} />
+              <AvatarImage src={avatarSrc(avatarUrl)} />
               <AvatarFallback>
-                {username?.charAt(0).toUpperCase()}
+                {username?.charAt(0).toUpperCase()|| "👤"}
               </AvatarFallback>
             </Avatar>
 

@@ -2,6 +2,9 @@
 import * as React from "react"
 import * as SheetPrimitive from "@radix-ui/react-dialog"
 import { cva } from "class-variance-authority";
+
+import { mediaUrl, defaultAvatar } from "../../utils/media";
+
 import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"

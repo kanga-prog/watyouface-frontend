@@ -2,12 +2,14 @@ import { useState, useRef } from "react";
 import { api } from "../../utils/api";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
+import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
 import { mediaUrl, defaultAvatar } from "../../utils/media";
 
 export default function CreatePostForm({ onPostCreated }) {
   const [content, setContent] = useState("");
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [fileType, setFileType] = useState(""); // "image", "video", "other"
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -15,24 +17,27 @@ export default function CreatePostForm({ onPostCreated }) {
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
 
-    if (
-      !selectedFile.type.startsWith("image/") &&
-      !selectedFile.type.startsWith("video/")
-    ) {
-      alert("Veuillez sélectionner une image ou une vidéo.");
-      return;
-    }
+    // Déterminer le type de fichier
+    if (selectedFile.type.startsWith("image/")) setFileType("image");
+    else if (selectedFile.type.startsWith("video/")) setFileType("video");
+    else setFileType("other");
 
     setFile(selectedFile);
 
-    const reader = new FileReader();
-    reader.onload = () => setPreview(reader.result);
-    reader.readAsDataURL(selectedFile);
+    // Prévisualisation uniquement pour image et vidéo
+    if (fileType === "image" || fileType === "video") {
+      const reader = new FileReader();
+      reader.onload = () => setPreview(reader.result);
+      reader.readAsDataURL(selectedFile);
+    } else {
+      setPreview(null);
+    }
   };
 
   const removeFile = () => {
     setFile(null);
     setPreview(null);
+    setFileType("");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -60,7 +65,6 @@ export default function CreatePostForm({ onPostCreated }) {
       removeFile();
 
       if (onPostCreated) onPostCreated();
-
     } catch (err) {
       alert("Erreur réseau : " + err.message);
     } finally {
@@ -77,12 +81,24 @@ export default function CreatePostForm({ onPostCreated }) {
         rows={3}
       />
 
-      {preview && (
+      {file && (
         <div className="mt-3 relative inline-block">
-          {file.type.startsWith("image/") ? (
-            <Avatar className="w-16 h-16"><AvatarImage src={preview || defaultAvatar} /><AvatarFallback>👤</AvatarFallback></Avatar>
-          ) : (
+          {fileType === "image" && preview && (
+            <Avatar className="w-16 h-16">
+              <AvatarImage src={preview || defaultAvatar} />
+              <AvatarFallback>👤</AvatarFallback>
+            </Avatar>
+          )}
+
+          {fileType === "video" && preview && (
             <video src={preview} controls className="max-h-64 rounded-lg" />
+          )}
+
+          {fileType === "other" && (
+            <div className="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded">
+              <span>📄</span>
+              <span>{file.name}</span>
+            </div>
           )}
 
           <Button
@@ -97,13 +113,13 @@ export default function CreatePostForm({ onPostCreated }) {
 
       <div className="mt-3 flex justify-between items-center">
         <label className="flex items-center space-x-2 cursor-pointer text-gray-600 hover:text-blue-600">
-          <span>📷</span>
-          <span>Image/vidéo</span>
+          <span>📷/📁</span>
+          <span>Fichier</span>
           <input
             type="file"
             ref={fileInputRef}
             onChange={handleFileChange}
-            accept="image/*,video/*"
+            accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
             className="hidden"
           />
         </label>
