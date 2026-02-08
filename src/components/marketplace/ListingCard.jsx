@@ -1,6 +1,7 @@
 // src/components/marketplace/ListingCard.jsx
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../ui/card";
+import { mediaUrl, defaultAvatar } from "../../utils/media";
 
 export default function ListingCard({ listing }) {
   const imageUrl = listing.image
@@ -16,11 +17,7 @@ export default function ListingCard({ listing }) {
         <CardDescription>{listing.price} €</CardDescription>
       </CardHeader>
       <CardContent>
-        <img
-          src={imageUrl}
-          alt={listing.title}
-          className="w-full h-48 object-cover rounded-lg mb-2"
-        />
+        <Avatar className="w-16 h-16"><AvatarImage src={imageUrl || defaultAvatar} /><AvatarFallback>👤</AvatarFallback></Avatar>
         <p className="text-gray-700">{listing.description}</p>
       </CardContent>
     </Card>

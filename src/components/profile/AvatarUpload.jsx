@@ -1,7 +1,8 @@
-import React, { useState } from "react"; 
+import React, { useState } from "react";
 import { api } from "../../utils/api";
 import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
 import { Button } from "../ui/button";
+import { mediaUrl, defaultAvatar } from "../../utils/media";
 
 export default function AvatarUpload({ onUpload, currentAvatarUrl }) {
   const [preview, setPreview] = useState(currentAvatarUrl || null);
@@ -17,10 +18,14 @@ export default function AvatarUpload({ onUpload, currentAvatarUrl }) {
     try {
       const res = await api.uploadAvatar(file);
       const data = await res.json();
+
       if (res.ok) {
-        alert("✅ Avatar mis à jour !");
         onUpload?.(data.avatarUrl);
-      } else alert("❌ Erreur : " + data.message);
+        setPreview(data.avatarUrl); // mettre à jour le preview avec l'URL réelle
+        alert("✅ Avatar mis à jour !");
+      } else {
+        alert("❌ Erreur : " + data.message);
+      }
     } catch (err) {
       console.error(err);
       alert("❌ Erreur réseau");
@@ -31,13 +36,18 @@ export default function AvatarUpload({ onUpload, currentAvatarUrl }) {
 
   return (
     <div className="flex flex-col items-center space-y-3">
-      <Avatar size="xs">
-        <AvatarImage src={preview || "http://localhost:8080/uploads/avatars/default.png"} />
+      <Avatar className="w-10 h-10">
+        <AvatarImage src={preview ? mediaUrl(preview) : defaultAvatar} />
         <AvatarFallback>👤</AvatarFallback>
       </Avatar>
 
       <label>
-        <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleFileChange}
+        />
         <Button variant="outline" size="sm" disabled={loading}>
           {loading ? "Chargement..." : "Changer l'avatar"}
         </Button>

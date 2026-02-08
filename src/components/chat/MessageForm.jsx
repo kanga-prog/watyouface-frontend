@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { mediaUrl, defaultAvatar } from "../../utils/media";
 
 export default function MessageForm({ onSend }) {
   const [text, setText] = useState("");

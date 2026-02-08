@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { connect, subscribe, sendMessage } from "../../utils/chatApi";
 import MessageForm from "./MessageForm";
 import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
+import { mediaUrl, defaultAvatar } from "../../utils/media";
 
 export default function ChatWindow({ convId, jwtToken, username }) {
   const [messages, setMessages] = useState([]);
@@ -13,33 +14,34 @@ export default function ChatWindow({ convId, jwtToken, username }) {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   };
 
-  const buildMediaUrl = (path) =>
-    path ? (path.startsWith("http") ? path : `http://localhost:8080${path}`) : "http://localhost:8080/uploads/avatars/default.png";
-
+  // 📥 Charger l’historique
   useEffect(() => {
     if (!jwtToken || !convId) return;
-    const loadMessages = async () => {
-      try {
-        const data = await fetch(`http://localhost:8080/api/messages/conversations/${convId}/messages`, {
-          headers: { Authorization: `Bearer ${jwtToken}` },
-        }).then((res) => res.json());
-        const list = Array.isArray(data) ? data : data.content?.reverse() || [];
+
+    setLoading(true);
+    fetch(`${import.meta.env.VITE_API_BASE}/api/messages/conversations/${convId}/messages`, {
+      headers: { Authorization: `Bearer ${jwtToken}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const list = Array.isArray(data) ? data : data?.content?.reverse() || [];
         setMessages(list);
-      } catch (err) {
-        console.error("Erreur chargement messages:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadMessages();
+      })
+      .catch((err) => console.error("Erreur messages:", err))
+      .finally(() => setLoading(false));
   }, [convId, jwtToken]);
 
+  // 🔌 WebSocket
   useEffect(() => {
     if (!jwtToken || !convId) return;
+
     connect(jwtToken, () => {
-      if (subRef.current) subRef.current.unsubscribe();
-      subRef.current = subscribe(convId, (msg) => setMessages((prev) => [...prev, msg]));
+      subRef.current?.unsubscribe();
+      subRef.current = subscribe(convId, (msg) =>
+        setMessages((prev) => [...prev, msg])
+      );
     });
+
     return () => subRef.current?.unsubscribe();
   }, [convId, jwtToken]);
 
@@ -60,19 +62,21 @@ export default function ChatWindow({ convId, jwtToken, username }) {
         ) : (
           messages.map((m) => {
             const isOwn = m.senderUsername === username;
+            const avatarSrc = (m.senderAvatarUrl ? mediaUrl(m.senderAvatarUrl) : defaultAvatar) ? mediaUrl((m.senderAvatarUrl ? mediaUrl(m.senderAvatarUrl) : defaultAvatar)) : defaultAvatar;
+
             return (
               <div key={m.id || Math.random()} className={`flex items-end mb-3 ${isOwn ? "justify-end" : "justify-start"}`}>
                 {!isOwn && (
-                  <Avatar size="xxs">
-                    <AvatarImage src={buildMediaUrl(m.senderAvatarUrl)} />
+                  <Avatar className="w-2 h-2">
+                    <AvatarImage src={avatarSrc} />
                     <AvatarFallback>👤</AvatarFallback>
                   </Avatar>
                 )}
 
-                <div className={`max-w-[70%] p-2 rounded-lg shadow ${isOwn ? "bg-blue-500 text-white ml-2" : "bg-gray-200 text-gray-800"}`}>
+                <div className={`max-w-[70%] p-2 rounded-lg shadow ${isOwn ? "bg-blue-500 text-white ml-2" : "bg-gray-200 text-gray-800 ml-2"}`}>
                   {!isOwn && (
                     <p className="text-xs font-semibold text-gray-600 mb-1">
-                      {m.senderUsername?.charAt(0).toUpperCase() + m.senderUsername?.slice(1)}
+                      {m.senderUsername}
                     </p>
                   )}
                   <p className="text-sm break-words">{m.content}</p>
@@ -82,8 +86,8 @@ export default function ChatWindow({ convId, jwtToken, username }) {
                 </div>
 
                 {isOwn && (
-                  <Avatar size="xxs">
-                    <AvatarImage src={buildMediaUrl(m.senderAvatarUrl)} />
+                  <Avatar className="w-2 h-2 ml-2">
+                    <AvatarImage src={avatarSrc} />
                     <AvatarFallback>👤</AvatarFallback>
                   </Avatar>
                 )}

@@ -1,6 +1,7 @@
 import * as React from "react"
 import * as LabelPrimitive from "@radix-ui/react-label"
 import { cva } from "class-variance-authority";
+import { mediaUrl, defaultAvatar } from "../../utils/media";
 
 import { cn } from "@/lib/utils"
 

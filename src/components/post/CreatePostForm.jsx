@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { api } from "../../utils/api";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
+import { mediaUrl, defaultAvatar } from "../../utils/media";
 
 export default function CreatePostForm({ onPostCreated }) {
   const [content, setContent] = useState("");
@@ -79,11 +80,7 @@ export default function CreatePostForm({ onPostCreated }) {
       {preview && (
         <div className="mt-3 relative inline-block">
           {file.type.startsWith("image/") ? (
-            <img
-              src={preview}
-              alt="Preview"
-              className="max-h-64 rounded-lg object-contain"
-            />
+            <Avatar className="w-16 h-16"><AvatarImage src={preview || defaultAvatar} /><AvatarFallback>👤</AvatarFallback></Avatar>
           ) : (
             <video src={preview} controls className="max-h-64 rounded-lg" />
           )}

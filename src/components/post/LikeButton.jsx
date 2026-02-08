@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { api } from "../../utils/api";
 import { Button } from "../ui/button";
+import { mediaUrl, defaultAvatar } from "../../utils/media";
 
 export default function LikeButton({ postId = null, videoId = null, initialLikeCount, initialLiked }) {
   const [likeCount, setLikeCount] = useState(initialLikeCount);

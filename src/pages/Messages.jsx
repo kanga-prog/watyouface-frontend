@@ -3,6 +3,7 @@ import { connect, subscribe, sendMessage } from "@/utils/chatApi";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { mediaUrl, defaultAvatar } from "../utils/media";
 
 export default function Messages({ conversationId, jwtToken }) {
   const [messages, setMessages] = useState([]);

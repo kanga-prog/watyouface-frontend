@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
 import Contract from "./pages/Contract";
+import { mediaUrl, defaultAvatar } from "./utils/media";
 
 // Nouvelles pages à créer
 import Marketplace from "./pages/Marketplace";

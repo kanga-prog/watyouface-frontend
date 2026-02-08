@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../utils/api";
+import { mediaUrl, defaultAvatar } from "../utils/media";
 
 import CreatePostForm from "../components/post/CreatePostForm";
 import PostCard from "../components/post/PostCard";

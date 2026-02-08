@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { api } from "../../utils/api";
+import { mediaUrl, defaultAvatar } from "../../utils/media";
 
 export default function CommentForm({ postId, onCommentAdded }) {
   const [content, setContent] = useState("");

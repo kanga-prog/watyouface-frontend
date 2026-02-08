@@ -4,6 +4,7 @@ import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { api } from "../../utils/api";
+import { mediaUrl, defaultAvatar } from "../../utils/media";
 
 export default function CreateListingForm({ onListingCreated }) {
   const [title, setTitle] = useState("");

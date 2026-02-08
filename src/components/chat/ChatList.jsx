@@ -1,5 +1,6 @@
 import React from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
+import { mediaUrl, defaultAvatar } from "../../utils/media";
 
 export default function ChatList({
   conversations = [],
@@ -7,22 +8,20 @@ export default function ChatList({
   selectedConvId,
   onSelect,
   onAvatarClick,
-  currentUserId
+  currentUserId,
 }) {
-  const buildAvatarUrl = (path) =>
-    path
-      ? path.startsWith("http")
-        ? path
-        : `http://localhost:8080${path}`
-      : "http://localhost:8080/uploads/avatars/default.png";
-
   return (
     <div className="flex flex-col">
       {conversations.map((conv) => {
         const isGroup = conv.group || conv.isGroup;
         const participants = Array.isArray(conv.participants) ? conv.participants : [];
-        const otherUser = !isGroup ? participants.find((u) => u.id !== currentUserId) : null;
-        const displayName = isGroup ? conv.title || "Groupe" : otherUser?.username || "Conversation";
+        const otherUser = !isGroup
+          ? participants.find((u) => u.id !== currentUserId)
+          : null;
+
+        const displayName = isGroup
+          ? conv.title || "Groupe"
+          : otherUser?.username || "Conversation";
 
         return (
           <div
@@ -33,8 +32,10 @@ export default function ChatList({
             }`}
           >
             {!isGroup ? (
-              <Avatar size="xxs">
-                <AvatarImage src={buildAvatarUrl(otherUser?.avatarUrl)} />
+              <Avatar className="w-2 h-2">
+                <AvatarImage
+                  src={otherUser?.avatarUrl ? mediaUrl((otherUser.avatarUrl ? mediaUrl(otherUser.avatarUrl) : defaultAvatar)) : defaultAvatar}
+                />
                 <AvatarFallback>👤</AvatarFallback>
               </Avatar>
             ) : (
@@ -45,7 +46,9 @@ export default function ChatList({
 
             <div className="min-w-0 flex-1">
               <p className="font-medium text-sm truncate">{displayName}</p>
-              <p className="text-xs text-gray-500 truncate">{conv.lastMessage || "Aucun message"}</p>
+              <p className="text-xs text-gray-500 truncate">
+                {conv.lastMessage || "Aucun message"}
+              </p>
             </div>
           </div>
         );
@@ -54,15 +57,18 @@ export default function ChatList({
       {users.length > 0 && (
         <>
           <hr className="my-2" />
-          <p className="text-xs text-gray-400 uppercase px-2 mb-1">👥 Nouveaux chats</p>
+          <p className="text-xs text-gray-400 uppercase px-2 mb-1">
+            👥 Nouveaux chats
+          </p>
+
           {users.map((user) => (
             <div
               key={user.id}
               onClick={() => onAvatarClick(user.id)}
               className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-gray-100 mb-1"
             >
-              <Avatar size="xxs">
-                <AvatarImage src={buildAvatarUrl(user.avatarUrl)} />
+              <Avatar className="w-2 h-2">
+                <AvatarImage src={(user.avatarUrl ? mediaUrl(user.avatarUrl) : defaultAvatar) ? mediaUrl((user.avatarUrl ? mediaUrl(user.avatarUrl) : defaultAvatar)) : defaultAvatar} />
                 <AvatarFallback>👤</AvatarFallback>
               </Avatar>
               <p className="font-medium text-sm truncate">{user.username}</p>

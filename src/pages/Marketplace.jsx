@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { api } from "../utils/api";
 import PostCard from "../components/post/PostCard";
 import CreatePostForm from "../components/post/CreatePostForm";
+import { mediaUrl, defaultAvatar } from "../utils/media";
 
 export default function Marketplace() {
   const [listings, setListings] = useState([]);

@@ -1,19 +1,34 @@
 // src/utils/api.js
-const API_BASE = "http://localhost:8080";
+
+// 🔧 Base API sécurisée avec fallback
+const API_BASE =
+  import.meta.env.VITE_API_BASE ||
+  "http://localhost:8080";
+
+// 🧪 Aide debug en dev
+if (import.meta.env.DEV) {
+  console.log("🌍 API_BASE =", API_BASE);
+  if (!API_BASE) {
+    console.error("❌ VITE_API_BASE est undefined !");
+  }
+}
 
 export const api = {
+  // 🔐 TOKEN
   getToken: () => localStorage.getItem("token"),
-
-  jsonHeaders: () => ({
-    Authorization: `Bearer ${api.getToken()}`,
-    "Content-Type": "application/json",
-  }),
 
   authHeader: () => ({
     Authorization: `Bearer ${api.getToken()}`,
   }),
 
-  // 🔹 AUTHENTIFICATION
+  jsonHeaders: () => ({
+    ...api.authHeader(),
+    "Content-Type": "application/json",
+  }),
+
+  // =========================
+  // 🔐 AUTH
+  // =========================
   login: (credentials) =>
     fetch(`${API_BASE}/api/auth/login`, {
       method: "POST",
@@ -21,21 +36,16 @@ export const api = {
       body: JSON.stringify(credentials),
     }),
 
-  register: (userData) =>
+  register: (data) =>
     fetch(`${API_BASE}/api/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(userData),
+      body: JSON.stringify(data),
     }),
 
-  acceptContract: (userEmail) =>
-    fetch(`${API_BASE}/api/auth/accept-contract`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: userEmail }),
-    }),
-
-  // 🔹 POSTS
+  // =========================
+  // 🧱 POSTS
+  // =========================
   getPosts: () =>
     fetch(`${API_BASE}/api/posts`, {
       headers: api.authHeader(),
@@ -48,15 +58,19 @@ export const api = {
       body: formData,
     }),
 
-  // 🔹 LIKES
-  toggleLike: ({ postId, videoId }) =>
+  // =========================
+  // ❤️ LIKES
+  // =========================
+  toggleLike: (payload) =>
     fetch(`${API_BASE}/api/likes/toggle`, {
       method: "POST",
       headers: api.jsonHeaders(),
-      body: JSON.stringify({ postId, videoId }),
+      body: JSON.stringify(payload),
     }),
 
-  // 🔹 COMMENTS
+  // =========================
+  // 💬 COMMENTS
+  // =========================
   getComments: (postId) =>
     fetch(`${API_BASE}/api/comments/post/${postId}`, {
       headers: api.authHeader(),
@@ -69,12 +83,17 @@ export const api = {
       body: JSON.stringify({ postId, content }),
     }),
 
-  // 🔹 MESSAGES / CHAT
-  fetchConversationMessages: async (conversationId) => {
-    const res = await fetch(`${API_BASE}/api/messages/conversations/${conversationId}/messages`, {
-      headers: api.authHeader(),
-    });
-    if (!res.ok) throw new Error(`Erreur chargement messages: ${res.status}`);
+  // =========================
+  // 💬 CHAT
+  // =========================
+  fetchConversationMessages: async (id) => {
+    const res = await fetch(
+      `${API_BASE}/api/messages/conversations/${id}/messages`,
+      { headers: api.authHeader() }
+    );
+    if (!res.ok) {
+      throw new Error(`Erreur messages (${res.status})`);
+    }
     return res.json();
   },
 
@@ -82,57 +101,60 @@ export const api = {
     const res = await fetch(`${API_BASE}/api/conversations`, {
       headers: api.authHeader(),
     });
-    if (!res.ok)
-      throw new Error(`Erreur chargement conversations: ${res.status}`);
+    if (!res.ok) {
+      throw new Error(`Erreur conversations (${res.status})`);
+    }
     return res.json();
   },
 
-  // ✅ Créer ou récupérer une conversation entre deux utilisateurs
-  getOrCreateConversation: async (otherUserId) => {
-    const res = await fetch(`${API_BASE}/api/conversations/with/${otherUserId}`, {
-      method: "POST",
-      headers: api.authHeader(),
-    });
-    if (!res.ok)
-      throw new Error(`Erreur création conversation: ${res.status}`);
+  getOrCreateConversation: async (userId) => {
+    const res = await fetch(
+      `${API_BASE}/api/conversations/with/${userId}`,
+      {
+        method: "POST",
+        headers: api.authHeader(),
+      }
+    );
+    if (!res.ok) {
+      throw new Error(`Erreur création conversation (${res.status})`);
+    }
     return res.json();
   },
 
-  // 🔹 PROFIL & UTILISATEURS
-  uploadAvatar: (file) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    return fetch(`${API_BASE}/api/users/avatar`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${api.getToken()}` },
-      body: formData,
-    });
-  },
-
+  // =========================
+  // 👤 PROFIL
+  // =========================
   getProfile: async () => {
     const res = await fetch(`${API_BASE}/api/users/me`, {
       headers: api.authHeader(),
     });
-    if (!res.ok) throw new Error(`Erreur de profil : ${res.status}`);
+    if (!res.ok) {
+      throw new Error(`Erreur profil (${res.status})`);
+    }
     return res.json();
   },
 
-  getUsers: async () => {
-    const res = await fetch(`${API_BASE}/api/users`, {
-      headers: api.authHeader(),
-    });
-    if (!res.ok) throw new Error("Erreur fetch users");
-    return res.json();
-  },
+  uploadAvatar: (file) => {
+    const fd = new FormData();
+    fd.append("file", file);
 
-  createPrivateConversation: async (otherUserId) => {
-    const res = await fetch(`${API_BASE}/api/conversations/private/${otherUserId}`, {
+    return fetch(`${API_BASE}/api/users/avatar`, {
       method: "POST",
       headers: api.authHeader(),
+      body: fd,
     });
-    if (!res.ok) throw new Error("Erreur création conversation");
-    return res.json();
   },
 
-  
+  // =========================
+  // 📜 CONTRACTS
+  // =========================
+  getActiveContract: () =>
+    fetch(`${API_BASE}/api/contracts/active`, {
+      
+    }),
+
+  downloadContract: (id) =>
+    fetch(`${API_BASE}/api/contracts/${id}/download`, {
+      headers: api.authHeader(),
+    }),
 };

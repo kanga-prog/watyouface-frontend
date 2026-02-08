@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
+import { mediaUrl, defaultAvatar } from "../utils/media";
 
 export default function RegisterForm() {
   const [formData, setFormData] = useState({

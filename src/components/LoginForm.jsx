@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { api } from "../utils/api";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
+import { mediaUrl, defaultAvatar } from "../utils/media";
 
 export default function LoginForm() {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -62,7 +63,15 @@ export default function LoginForm() {
           Se connecter
         </Button>
       </form>
+
       {message && <p className="mt-3 text-center text-sm">{message}</p>}
+
+      <p className="mt-4 text-center text-sm">
+        Pas encore de compte ?{" "}
+        <Link to="/register" className="text-blue-600 hover:underline">
+          S'inscrire
+        </Link>
+      </p>
     </Card>
   );
 }
