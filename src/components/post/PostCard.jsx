@@ -33,7 +33,7 @@ export default function PostCard({ post }) {
     <Card className="mb-6">
       {/* HEADER */}
       <div className="flex items-center gap-3 p-4">
-        <Avatar className="w-10 h-10">
+        <Avatar size="lg">
           <AvatarImage src={avatarUrl} />
           <AvatarFallback>
             {post.author?.username?.[0]?.toUpperCase() || "👤"}

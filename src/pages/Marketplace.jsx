@@ -1,48 +1,39 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import MarketplaceSidebar from "../components/marketplace/MarketplaceSidebar";
 import { api } from "../utils/api";
-import PostCard from "../components/post/PostCard";
-import CreatePostForm from "../components/post/CreatePostForm";
-import { mediaUrl, defaultAvatar } from "../utils/media";
 
 export default function Marketplace() {
-  const [listings, setListings] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState(null);
+  const navigate = useNavigate();
 
-  const loadListings = async () => {
-    setLoading(true);
+  // Fonction pour rafraîchir le profil (utile pour le wallet)
+  const refreshUser = async () => {
     try {
-      const res = await api.getMarketplacePosts();
-      const data = await res.json();
-      setListings(Array.isArray(data) ? data : data.content || []);
-    } catch (err) {
-      console.error("Erreur marketplace :", err);
-      setListings([]);
-    } finally {
-      setLoading(false);
+      const data = await api.getProfile();
+      setCurrentUser(data);
+    } catch {
+      navigate("/login");
     }
   };
 
   useEffect(() => {
-    loadListings();
+    refreshUser();
   }, []);
 
-  return (
-    <div className="max-w-3xl mx-auto p-4 space-y-4 min-h-screen bg-gray-50">
-      <div className="bg-white rounded-2xl shadow p-4">
-        <CreatePostForm onPostCreated={loadListings} marketplaceMode={true} />
-      </div>
+  if (!currentUser) return null;
 
-      {loading ? (
-        <p className="text-center text-gray-500">Chargement des annonces...</p>
-      ) : listings.length === 0 ? (
-        <p className="text-center text-gray-400">Aucune annonce pour le moment</p>
-      ) : (
-        listings.map((post) => (
-          <div key={post.id} className="bg-white rounded-2xl shadow p-4">
-            <PostCard post={post} marketplaceMode={true} />
-          </div>
-        ))
-      )}
+  return (
+    <div className="flex w-full h-screen bg-gray-50 pt-20">
+      {/* SIDEBAR MARKETPLACE */}
+      <aside className="w-96 border-r flex flex-col">
+        <MarketplaceSidebar currentUser={currentUser} refreshUser={refreshUser} />
+      </aside>
+
+      {/* CONTENU CENTRAL (optionnel, feed ou autres) */}
+      <main className="flex-1 flex items-center justify-center">
+        <p className="text-gray-400">Sélectionnez un article dans le marketplace.</p>
+      </main>
     </div>
   );
 }

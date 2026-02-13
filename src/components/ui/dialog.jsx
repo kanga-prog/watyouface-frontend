@@ -11,6 +11,7 @@ const DialogTrigger = DialogPrimitive.Trigger
 const DialogPortal = DialogPrimitive.Portal
 
 const DialogClose = DialogPrimitive.Close
+  
 
 const DialogOverlay = React.forwardRef(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
@@ -79,6 +80,9 @@ const DialogDescription = React.forwardRef(({ className, ...props }, ref) => (
     {...props} />
 ))
 DialogDescription.displayName = DialogPrimitive.Description.displayName
+
+const Modal = DialogContent
+export default Modal
 
 export {
   Dialog,

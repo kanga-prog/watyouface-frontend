@@ -159,21 +159,54 @@ export const api = {
     throw new Error(`Erreur users (${res.status})`);
   }
   return res.json();
-},
+  },
 
 
-  // =========================
-  // 📜 CONTRACTS
-  // =========================
+    // =========================
+    // 📜 CONTRACTS
+    // =========================
   getActiveContract: () =>
     fetch(`${API_BASE}/api/contracts/active`, {
-      
-    }),
+        
+  }),
 
   downloadContract: (id) =>
     fetch(`${API_BASE}/api/contracts/${id}/download`, {
       headers: api.authHeader(),
-    }),
+  }),
 
 
+
+
+
+
+    // =========================
+    // 🏪 MARKETPLACE
+    // =========================
+  getListings: async () => {
+    const res = await fetch(`${API_BASE}/api/marketplace/listings`, {
+      headers: api.authHeader(),
+    });
+    if (!res.ok) throw new Error(`Erreur marketplace (${res.status})`);
+    return res.json();
+  },
+
+  payListing: async (listingId, buyerId) => {
+    const res = await fetch(`${API_BASE}/api/marketplace/listings/${listingId}/pay?buyerId=${buyerId}`, {
+      method: "POST",
+      headers: api.authHeader(),
+    });
+    if (!res.ok) throw new Error(`Erreur paiement (${res.status})`);
+    return res.json();
+  },
+
+  createListing: async (listingData) => {
+    const res = await fetch(`${API_BASE}/api/marketplace/listings`, {
+      method: "POST",
+      headers: api.jsonHeaders(),
+      body: JSON.stringify(listingData),
+    });
+    if (!res.ok) throw new Error(`Erreur création listing (${res.status})`);
+    return res.json();
+  },
 };

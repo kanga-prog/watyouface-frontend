@@ -6,7 +6,7 @@ const avatarSrc = (url) => (url ? mediaUrl(url) : defaultAvatar);
 export default function CommentItem({ comment }) {
   return (
     <div className="flex gap-2 py-2">
-      <Avatar className="w-6 h-6 shrink-0">
+      <Avatar size="sm">
         <AvatarImage src={avatarSrc(comment.author?.avatarUrl)} />
         <AvatarFallback>
           {comment.author?.username?.[0]?.toUpperCase() || "👤"}

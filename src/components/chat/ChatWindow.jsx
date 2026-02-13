@@ -14,18 +14,26 @@ export default function ChatWindow({ convId, jwtToken, username }) {
   const scrollRef = useRef(null);
 
   const scrollToBottom = () => {
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
   };
 
   /* ===== Charger l’historique ===== */
   useEffect(() => {
     if (!jwtToken || !convId) return;
+
     setLoading(true);
-    fetch(`${import.meta.env.VITE_API_BASE}/api/messages/conversations/${convId}/messages`, {
-      headers: { Authorization: `Bearer ${jwtToken}` },
-    })
+    fetch(
+      `${import.meta.env.VITE_API_BASE}/api/messages/conversations/${convId}/messages`,
+      {
+        headers: { Authorization: `Bearer ${jwtToken}` },
+      }
+    )
       .then((res) => res.json())
-      .then((data) => setMessages(Array.isArray(data) ? data : data?.content || []))
+      .then((data) =>
+        setMessages(Array.isArray(data) ? data : data?.content || [])
+      )
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [convId, jwtToken]);
@@ -33,10 +41,14 @@ export default function ChatWindow({ convId, jwtToken, username }) {
   /* ===== WebSocket temps réel ===== */
   useEffect(() => {
     if (!jwtToken || !convId) return;
+
     connect(jwtToken, () => {
       subRef.current?.unsubscribe();
-      subRef.current = subscribe(convId, (msg) => setMessages((prev) => [...prev, msg]));
+      subRef.current = subscribe(convId, (msg) =>
+        setMessages((prev) => [...prev, msg])
+      );
     });
+
     return () => subRef.current?.unsubscribe();
   }, [convId, jwtToken]);
 
@@ -48,25 +60,35 @@ export default function ChatWindow({ convId, jwtToken, username }) {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-gradient-to-b from-gray-50 to-gray-100 rounded-lg p-3">
-      
-      {/* 🧾 Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-2 mb-2">
+    <div className="flex-1 flex flex-col bg-blue-50">
+
+      {/* 💬 Messages */}
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto space-y-2 p-3"
+      >
         {loading ? (
-          <p className="text-center text-gray-500">Chargement du chat…</p>
+          <p className="text-center text-gray-500 mt-4">
+            Chargement du chat…
+          </p>
         ) : messages.length === 0 ? (
-          <p className="text-center text-gray-400 text-sm">Aucun message pour cette conversation.</p>
+          <p className="text-center text-gray-400 text-sm">
+            Aucun message pour cette conversation.
+          </p>
         ) : (
           messages.map((m) => {
             const isOwn = m.senderUsername === username;
             const avatar = avatarSrc(m.senderAvatarUrl);
+
             return (
               <div
                 key={m.id}
-                className={`flex items-end ${isOwn ? "justify-end" : "justify-start"}`}
+                className={`flex items-end ${
+                  isOwn ? "justify-end" : "justify-start"
+                }`}
               >
                 {!isOwn && (
-                  <Avatar className="w-6 h-6 mr-2 shrink-0">
+                  <Avatar size="md">
                     <AvatarImage src={avatar} />
                     <AvatarFallback>👤</AvatarFallback>
                   </Avatar>
@@ -84,7 +106,10 @@ export default function ChatWindow({ convId, jwtToken, username }) {
                   )}
                   <p className="text-sm break-words">{m.content}</p>
                   <p className="text-[10px] text-right text-gray-400 mt-1">
-                    {new Date(m.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    {new Date(m.createdAt).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </p>
                 </div>
 

@@ -13,7 +13,9 @@ export default function ChatList({
   currentUserId,
 }) {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col p-2">
+
+      {/* Conversations existantes */}
       {conversations.map((conv) => {
         const isGroup = conv.group || conv.isGroup;
         const participants = Array.isArray(conv.participants)
@@ -39,7 +41,7 @@ export default function ChatList({
             }`}
           >
             {!isGroup ? (
-              <Avatar className="w-8 h-8">
+              <Avatar size="md">
                 <AvatarImage src={avatarSrc(otherUser?.avatarUrl)} />
                 <AvatarFallback>👤</AvatarFallback>
               </Avatar>
@@ -59,6 +61,7 @@ export default function ChatList({
         );
       })}
 
+      {/* Nouveaux chats */}
       {users.length > 0 && (
         <>
           <hr className="my-2" />
@@ -72,7 +75,7 @@ export default function ChatList({
               onClick={() => onAvatarClick(user.id)}
               className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-gray-100 mb-1"
             >
-              <Avatar className="w-8 h-8">
+              <Avatar size="md">
                 <AvatarImage src={avatarSrc(user.avatarUrl)} />
                 <AvatarFallback>👤</AvatarFallback>
               </Avatar>

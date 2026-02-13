@@ -9,7 +9,8 @@ const sizeMap = {
   sm:  "w-6 h-6",    // ~12px
   md:  "w-8 h-8",    // ~16px
   lg:  "w-10 h-10",  // ~20px
-  xl:  "w-24 h-24",  // 96px
+  xl:  "w-24 h-24", 
+  xxl: "w-32 h-32", // 96px
 };
 
 const Avatar = React.forwardRef(({ className, size = "md", ...props }, ref) => (

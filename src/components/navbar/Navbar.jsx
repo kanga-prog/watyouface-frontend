@@ -25,7 +25,7 @@ export default function Navbar() {
 
         {token && (
           <div className="flex items-center gap-2">
-            <Avatar className="w-4 h-4">
+            <Avatar size="lg">
               <AvatarImage src={avatarSrc(avatarUrl)} />
               <AvatarFallback>
                 {username?.charAt(0).toUpperCase()|| "👤"}

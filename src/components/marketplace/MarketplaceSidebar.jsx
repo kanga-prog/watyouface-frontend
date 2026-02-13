@@ -1,95 +1,117 @@
-// src/components/marketplace/MarketplaceSidebar.jsx
-import React, { useState } from "react";
-import { mediaUrl, defaultAvatar } from "../../utils/media";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  Button,
-  Checkbox,
-  Label,
-  Input,
-} from "../ui"; // 🔹 Shadcn UI components
+import React, { useState, useEffect } from "react";
+import { api } from "../../utils/api";
+import ListingCard from "./ListingCard";
+import { Card, CardHeader, CardTitle, CardContent, Input, Button, Checkbox, Label } from "../ui";
 
-export default function MarketplaceSidebar({ filters, onFilterChange }) {
-  const [category, setCategory] = useState(filters?.category || "");
-  const [minPrice, setMinPrice] = useState(filters?.minPrice || "");
-  const [maxPrice, setMaxPrice] = useState(filters?.maxPrice || "");
-  const [onlyAvailable, setOnlyAvailable] = useState(filters?.onlyAvailable || false);
+export default function MarketplaceSidebar({ currentUser, refreshUser }) {
+  const [listings, setListings] = useState([]);
+  const [filters, setFilters] = useState({ category: "", minPrice: "", maxPrice: "", onlyAvailable: false });
+  const [loading, setLoading] = useState(true);
 
-  const handleApplyFilters = () => {
-    onFilterChange?.({
-      category,
-      minPrice: minPrice ? Number(minPrice) : null,
-      maxPrice: maxPrice ? Number(maxPrice) : null,
-      onlyAvailable,
-    });
+  // Charger les annonces
+  const loadListings = async () => {
+    setLoading(true);
+    try {
+      const data = await api.getListings();
+      setListings(Array.isArray(data) ? data : data.content || []);
+    } catch (err) {
+      console.error("Erreur marketplace :", err);
+      setListings([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleReset = () => {
-    setCategory("");
-    setMinPrice("");
-    setMaxPrice("");
-    setOnlyAvailable(false);
-    onFilterChange?.({});
+  useEffect(() => {
+    loadListings();
+  }, []);
+
+  // Filtrer les annonces selon les critères
+  const handleFilterChange = () => {
+    let filtered = listings;
+    if (filters.category)
+      filtered = filtered.filter((l) => l.category?.toLowerCase().includes(filters.category.toLowerCase()));
+    if (filters.minPrice) filtered = filtered.filter((l) => l.price >= Number(filters.minPrice));
+    if (filters.maxPrice) filtered = filtered.filter((l) => l.price <= Number(filters.maxPrice));
+    if (filters.onlyAvailable) filtered = filtered.filter((l) => l.status === "available");
+    return filtered;
   };
+
+  // Action déclenchée par ListingCard (chat, update)
+  const handleAction = async ({ type, conversationId, listing, listingId, status }) => {
+    if (type === "chat") {
+      // redirect vers inbox/chat avec conversationId
+      console.log("Ouvrir chat pour listing", listing.title, conversationId);
+    }
+
+    if (type === "update") {
+      setListings((prev) =>
+        prev.map((l) => (l.id === listingId ? { ...l, status } : l))
+      );
+
+      // 🔹 Mise à jour du wallet après paiement
+      if (status === "paid" && refreshUser) {
+        await refreshUser(); // récupère le nouveau solde
+      }
+    }
+  };
+
+  const filteredListings = handleFilterChange();
 
   return (
-    <Card className="w-80 p-4 space-y-4">
+    <Card className="w-80 p-4 space-y-4 h-full flex flex-col">
       <CardHeader>
-        <CardTitle>Filtrer les annonces</CardTitle>
+        <CardTitle>🛒 Marketplace</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="flex flex-col space-y-1">
-          <Label htmlFor="category">Catégorie</Label>
+
+      <CardContent className="space-y-3 flex-1 overflow-y-auto">
+        {/* FILTRES */}
+        <div className="space-y-2 mb-4">
           <Input
-            id="category"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            placeholder="Ex: Électronique"
+            placeholder="Catégorie"
+            value={filters.category}
+            onChange={(e) => setFilters({ ...filters, category: e.target.value })}
           />
+          <div className="flex gap-2">
+            <Input
+              type="number"
+              placeholder="Prix min"
+              value={filters.minPrice}
+              onChange={(e) => setFilters({ ...filters, minPrice: e.target.value })}
+            />
+            <Input
+              type="number"
+              placeholder="Prix max"
+              value={filters.maxPrice}
+              onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="onlyAvailable"
+              checked={filters.onlyAvailable}
+              onCheckedChange={(checked) => setFilters({ ...filters, onlyAvailable: checked })}
+            />
+            <Label htmlFor="onlyAvailable">Disponible uniquement</Label>
+          </div>
+          <Button onClick={loadListings} className="w-full">🔄 Rafraîchir</Button>
         </div>
 
-        <div className="flex flex-col space-y-1">
-          <Label htmlFor="minPrice">Prix min</Label>
-          <Input
-            type="number"
-            id="minPrice"
-            value={minPrice}
-            onChange={(e) => setMinPrice(e.target.value)}
-            placeholder="0"
-          />
-        </div>
-
-        <div className="flex flex-col space-y-1">
-          <Label htmlFor="maxPrice">Prix max</Label>
-          <Input
-            type="number"
-            id="maxPrice"
-            value={maxPrice}
-            onChange={(e) => setMaxPrice(e.target.value)}
-            placeholder="1000"
-          />
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="onlyAvailable"
-            checked={onlyAvailable}
-            onCheckedChange={(checked) => setOnlyAvailable(checked)}
-          />
-          <Label htmlFor="onlyAvailable">Disponible uniquement</Label>
-        </div>
-
-        <div className="flex gap-2 mt-2">
-          <Button onClick={handleApplyFilters} className="flex-1">
-            Appliquer
-          </Button>
-          <Button variant="outline" onClick={handleReset} className="flex-1">
-            Réinitialiser
-          </Button>
-        </div>
+        {/* LISTINGS */}
+        {loading ? (
+          <p className="text-center text-gray-500">Chargement...</p>
+        ) : filteredListings.length === 0 ? (
+          <p className="text-center text-gray-400">Aucune annonce</p>
+        ) : (
+          filteredListings.map((l) => (
+            <ListingCard
+              key={l.id}
+              listing={l}
+              currentUser={currentUser}
+              onAction={handleAction}
+            />
+          ))
+        )}
       </CardContent>
     </Card>
   );

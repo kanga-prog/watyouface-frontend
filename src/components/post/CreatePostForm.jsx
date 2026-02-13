@@ -84,7 +84,7 @@ export default function CreatePostForm({ onPostCreated }) {
       {file && (
         <div className="mt-3 relative inline-block">
           {fileType === "image" && preview && (
-            <Avatar className="w-16 h-16">
+            <Avatar size="md">
               <AvatarImage src={preview || defaultAvatar} />
               <AvatarFallback>👤</AvatarFallback>
             </Avatar>

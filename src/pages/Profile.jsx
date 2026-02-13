@@ -22,6 +22,11 @@ export default function Profile() {
   const [downloading, setDownloading] = useState(false);
 
   const [saving, setSaving] = useState(false);
+
+  // ==== WALLET ====
+  const [walletAmount, setWalletAmount] = useState("");
+  const [recharging, setRecharging] = useState(false);
+
   const navigate = useNavigate();
 
   const avatarSrc = (url) => (url ? mediaUrl(url) : defaultAvatar);
@@ -91,6 +96,24 @@ export default function Profile() {
     setDownloading(false);
   };
 
+  /* ===== WALLET ===== */
+  const handleRecharge = async () => {
+    if (!walletAmount || Number(walletAmount) <= 0) return;
+    setRecharging(true);
+    try {
+      await api.rechargeWallet(user.id, Number(walletAmount));
+      setWalletAmount("");
+      // reload user to update wallet balance
+      const updatedUser = await api.getProfile();
+      setUser(updatedUser);
+    } catch (err) {
+      console.error(err);
+      alert("Erreur lors du rechargement du wallet.");
+    } finally {
+      setRecharging(false);
+    }
+  };
+
   if (!user) return null;
 
   return (
@@ -128,6 +151,25 @@ export default function Profile() {
             currentAvatarUrl={user.avatarUrl}
             onUpload={handleAvatarUpload}
           />
+        </section>
+
+        {/* ===== WALLET ===== */}
+        <section className="bg-white p-6 rounded shadow space-y-3">
+          <h2 className="text-xl font-semibold">💰 Wallet</h2>
+          <p>Solde : <span className="font-bold">{user.wallet || 0} WUF</span></p>
+
+          <div className="flex gap-2 mt-2">
+            <input
+              type="number"
+              placeholder="Montant à recharger"
+              className="border p-2 rounded flex-1"
+              value={walletAmount}
+              onChange={(e) => setWalletAmount(e.target.value)}
+            />
+            <Button onClick={handleRecharge} disabled={recharging}>
+              {recharging ? "Rechargement..." : "Recharger"}
+            </Button>
+          </div>
         </section>
 
         {/* ===== IDENTITÉ ===== */}

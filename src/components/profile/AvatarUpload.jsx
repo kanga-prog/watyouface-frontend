@@ -47,7 +47,7 @@ export default function AvatarUpload({ onUpload, currentAvatarUrl }) {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <Avatar className="w-24 h-24 ring-4 ring-blue-500/20">
+      <Avatar size="xl">
         <AvatarImage src={avatarSrc(preview)} />
         <AvatarFallback>👤</AvatarFallback>
       </Avatar>
