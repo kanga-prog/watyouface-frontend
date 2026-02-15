@@ -146,7 +146,7 @@ export const api = {
   },
 
   updateUsername: (username) =>
-  fetch(`${API_BASE}/api/users/username`, {
+  fetch(`${API_BASE}/api/users/update`, {
     method: "PUT",
     headers: api.jsonHeaders(),
     body: JSON.stringify({ username }),
@@ -161,23 +161,27 @@ export const api = {
   return res.json();
   },
 
-
     // =========================
-    // 📜 CONTRACTS
-    // =========================
+  // 📜 CONTRACTS
+  // =========================
   getActiveContract: () =>
-    fetch(`${API_BASE}/api/contracts/active`, {
-        
-  }),
+    fetch(`${API_BASE}/api/contracts/active`),
 
   downloadContract: (id) =>
     fetch(`${API_BASE}/api/contracts/${id}/download`, {
       headers: api.authHeader(),
-  }),
+    }),
 
+  acceptContract: async (userId, contractId, accepted) => {
+    const res = await fetch(`${API_BASE}/api/contracts/accept`, {
+      method: "POST",
+      headers: api.jsonHeaders(),
+      body: JSON.stringify({ userId, contractId, accepted }),
+    });
 
-
-
+    if (!res.ok) throw new Error(await res.text());
+    return res.text();
+  },
 
 
     // =========================
@@ -191,14 +195,15 @@ export const api = {
     return res.json();
   },
 
-  payListing: async (listingId, buyerId) => {
-    const res = await fetch(`${API_BASE}/api/marketplace/listings/${listingId}/pay?buyerId=${buyerId}`, {
+  payListing: async (listingId) => {
+    const res = await fetch(`${API_BASE}/api/marketplace/listings/${listingId}/pay`, {
       method: "POST",
       headers: api.authHeader(),
     });
     if (!res.ok) throw new Error(`Erreur paiement (${res.status})`);
     return res.json();
   },
+
 
   createListing: async (listingData) => {
     const res = await fetch(`${API_BASE}/api/marketplace/listings`, {
