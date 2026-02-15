@@ -4,7 +4,14 @@ import { Button } from "../ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
 import { mediaUrl, defaultAvatar } from "../../utils/media";
 import { api } from "../../utils/api";
-import { Dialog, DialogContent } from "../ui/dialog";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "../ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 export default function ListingCard({ listing, currentUser, onAction }) {
   const [loading, setLoading] = useState(false);
@@ -20,7 +27,7 @@ export default function ListingCard({ listing, currentUser, onAction }) {
   const isSeller = meId === listing.sellerId;
   const isBuyer = listing.buyerId != null && meId === listing.buyerId;
 
-  const status = listing.status; // ex: AVAILABLE / PENDING / ACCEPTED / PAID / SHIPPED / RECEIVED / REFUSED
+  const status = listing.status; // AVAILABLE / PENDING / ACCEPTED / PAID / SHIPPED / RECEIVED / REFUSED
 
   const handleChat = async () => {
     setLoading(true);
@@ -49,7 +56,6 @@ export default function ListingCard({ listing, currentUser, onAction }) {
   return (
     <>
       <Card className="rounded-2xl shadow-lg relative">
-        {/* Badge status */}
         <div className="absolute top-2 right-2 text-xs px-2 py-1 rounded-full bg-gray-100 border">
           {status}
         </div>
@@ -79,7 +85,7 @@ export default function ListingCard({ listing, currentUser, onAction }) {
           <p className="text-gray-700">{listing.description}</p>
 
           <div className="flex flex-wrap gap-2 mt-3">
-            {/* BUYER actions */}
+            {/* BUYER */}
             {!isSeller && status === "AVAILABLE" && (
               <>
                 <Button size="sm" onClick={handleChat} disabled={loading}>
@@ -87,9 +93,7 @@ export default function ListingCard({ listing, currentUser, onAction }) {
                 </Button>
                 <Button
                   size="sm"
-                  onClick={() =>
-                    doAction(() => api.requestPurchase(listing.id), "PENDING")
-                  }
+                  onClick={() => doAction(() => api.requestPurchase(listing.id), "PENDING")}
                   disabled={loading}
                 >
                   🛍️ Demander achat
@@ -117,7 +121,7 @@ export default function ListingCard({ listing, currentUser, onAction }) {
               </Button>
             )}
 
-            {/* SELLER actions */}
+            {/* SELLER */}
             {isSeller && status === "PENDING" && (
               <>
                 <Button
@@ -153,6 +157,13 @@ export default function ListingCard({ listing, currentUser, onAction }) {
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-3xl">
+          <VisuallyHidden>
+            <DialogTitle>Image de l’annonce</DialogTitle>
+            <DialogDescription>
+              Aperçu détaillé de l’image de l’annonce marketplace
+            </DialogDescription>
+          </VisuallyHidden>
+
           <img src={imageUrl} alt={listing.title} className="w-full rounded-xl" />
         </DialogContent>
       </Dialog>

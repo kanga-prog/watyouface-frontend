@@ -187,13 +187,14 @@ export const api = {
     // =========================
     // 🏪 MARKETPLACE
     // =========================
-  getListings: async () => {
+ getListings: async () => {
     const res = await fetch(`${API_BASE}/api/marketplace/listings`, {
       headers: api.authHeader(),
     });
-    if (!res.ok) throw new Error(`Erreur marketplace (${res.status})`);
+    if (!res.ok) throw new Error(await res.text());
     return res.json();
   },
+
 
   payListing: async (listingId) => {
     const res = await fetch(`${API_BASE}/api/marketplace/listings/${listingId}/pay`, {
@@ -204,15 +205,16 @@ export const api = {
     return res.json();
   },
 
-  createListing: async (listingData) => {
+   createListing: async (listingData) => {
     const res = await fetch(`${API_BASE}/api/marketplace/listings`, {
       method: "POST",
       headers: api.jsonHeaders(),
       body: JSON.stringify(listingData),
     });
-    if (!res.ok) throw new Error(`Erreur création listing (${res.status})`);
+    if (!res.ok) throw new Error(await res.text());
     return res.json();
   },
+
   requestPurchase: async (listingId) => {
     const res = await fetch(`${API_BASE}/api/marketplace/listings/${listingId}/request`, {
       method: "POST",
