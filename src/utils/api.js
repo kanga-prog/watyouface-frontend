@@ -200,10 +200,9 @@ export const api = {
       method: "POST",
       headers: api.authHeader(),
     });
-    if (!res.ok) throw new Error(`Erreur paiement (${res.status})`);
+    if (!res.ok) throw new Error(await res.text());
     return res.json();
   },
-
 
   createListing: async (listingData) => {
     const res = await fetch(`${API_BASE}/api/marketplace/listings`, {
@@ -212,6 +211,50 @@ export const api = {
       body: JSON.stringify(listingData),
     });
     if (!res.ok) throw new Error(`Erreur création listing (${res.status})`);
+    return res.json();
+  },
+  requestPurchase: async (listingId) => {
+    const res = await fetch(`${API_BASE}/api/marketplace/listings/${listingId}/request`, {
+      method: "POST",
+      headers: api.authHeader(),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+
+  acceptListing: async (listingId) => {
+    const res = await fetch(`${API_BASE}/api/marketplace/listings/${listingId}/accept`, {
+      method: "POST",
+      headers: api.authHeader(),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+
+  refuseListing: async (listingId) => {
+    const res = await fetch(`${API_BASE}/api/marketplace/listings/${listingId}/refuse`, {
+      method: "POST",
+      headers: api.authHeader(),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+
+  shipListing: async (listingId) => {
+    const res = await fetch(`${API_BASE}/api/marketplace/listings/${listingId}/ship`, {
+      method: "POST",
+      headers: api.authHeader(),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+
+  receiveListing: async (listingId) => {
+    const res = await fetch(`${API_BASE}/api/marketplace/listings/${listingId}/receive`, {
+      method: "POST",
+      headers: api.authHeader(),
+    });
+    if (!res.ok) throw new Error(await res.text());
     return res.json();
   },
 };

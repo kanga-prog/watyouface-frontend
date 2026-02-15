@@ -33,7 +33,7 @@ export default function MarketplaceSidebar({ currentUser, refreshUser }) {
       filtered = filtered.filter((l) => l.category?.toLowerCase().includes(filters.category.toLowerCase()));
     if (filters.minPrice) filtered = filtered.filter((l) => l.price >= Number(filters.minPrice));
     if (filters.maxPrice) filtered = filtered.filter((l) => l.price <= Number(filters.maxPrice));
-    if (filters.onlyAvailable) filtered = filtered.filter((l) => l.status === "available");
+    if (filters.onlyAvailable) filtered = filtered.filter((l) => l.status === "AVAILABLE");
     return filtered;
   };
 
@@ -50,7 +50,7 @@ export default function MarketplaceSidebar({ currentUser, refreshUser }) {
       );
 
       // 🔹 Mise à jour du wallet après paiement
-      if (status === "paid" && refreshUser) {
+      if (status === "PAID" && refreshUser) {
         await refreshUser(); // récupère le nouveau solde
       }
     }
