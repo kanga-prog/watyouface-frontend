@@ -12,6 +12,18 @@ if (import.meta.env.DEV) {
     console.error("❌ VITE_API_BASE est undefined !");
   }
 }
+async function parseError(res) {
+  const ct = res.headers.get("content-type") || "";
+  if (ct.includes("application/json")) {
+    const data = await res.json().catch(() => null);
+    if (data?.error) return data.error;
+    if (data?.message) return data.message;
+    return data ? JSON.stringify(data) : `HTTP ${res.status}`;
+  }
+  const text = await res.text().catch(() => "");
+  return text || `HTTP ${res.status}`;
+}
+
 
 export const api = {
   // 🔐 TOKEN
@@ -179,8 +191,8 @@ export const api = {
       body: JSON.stringify({ userId, contractId, accepted }),
     });
 
-    if (!res.ok) throw new Error(await res.text());
-    return res.text();
+    if (!res.ok) throw new Error(await parseError(res));
+    return await res.text();
   },
 
 
@@ -191,7 +203,7 @@ export const api = {
     const res = await fetch(`${API_BASE}/api/marketplace/listings`, {
       headers: api.authHeader(),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) throw new Error(await parseError(res));
     return res.json();
   },
 
@@ -201,7 +213,7 @@ export const api = {
       method: "POST",
       headers: api.authHeader(),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) throw new Error(await parseError(res));
     return res.json();
   },
 
@@ -211,7 +223,7 @@ export const api = {
       headers: api.jsonHeaders(),
       body: JSON.stringify(listingData),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) throw new Error(await parseError(res));
     return res.json();
   },
 
@@ -220,7 +232,7 @@ export const api = {
       method: "POST",
       headers: api.authHeader(),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) throw new Error(await parseError(res));
     return res.json();
   },
 
@@ -229,7 +241,7 @@ export const api = {
       method: "POST",
       headers: api.authHeader(),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) throw new Error(await parseError(res));
     return res.json();
   },
 
@@ -238,7 +250,7 @@ export const api = {
       method: "POST",
       headers: api.authHeader(),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) throw new Error(await parseError(res));
     return res.json();
   },
 
@@ -247,7 +259,7 @@ export const api = {
       method: "POST",
       headers: api.authHeader(),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) throw new Error(await parseError(res));
     return res.json();
   },
 
@@ -256,7 +268,41 @@ export const api = {
       method: "POST",
       headers: api.authHeader(),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) throw new Error(await parseError(res));
     return res.json();
   },
+
+  // ADMIN: update listing fields
+  updateListing: async (id, payload) => {
+    const res = await fetch(`${API_BASE}/api/marketplace/listings/${id}`, {
+      method: "PUT",
+      headers: api.jsonHeaders(),
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error(await parseError(res));
+    return res.json();
+  },
+
+  // ADMIN: delete listing
+  deleteListing: async (id) => {
+    const res = await fetch(`${API_BASE}/api/marketplace/listings/${id}`, {
+      method: "DELETE",
+      headers: api.authHeader(),
+    });
+    if (!res.ok) throw new Error(await parseError(res));
+    return res.json(); // {message:"Annonce supprimée"}
+  },
+
+
+
+     // =========================
+      // 🏪 WALLET
+     // =========================
+
+  getMyWallet: async () => {
+      const res = await fetch(`${API_BASE}/api/wallet/me`, { headers: api.authHeader() });
+      if (!res.ok) throw new Error(await parseError(res));
+      return res.json(); // { userId, balance }
+    },
+    
 };

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../../utils/api";
 import ListingCard from "./ListingCard";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
@@ -8,12 +8,13 @@ import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
 import CreateListingDialog from "./CreateListingDialog";
 
-export default function MarketplaceSidebar({ currentUser, refreshUser }) {
+export default function MarketplaceSidebar({ currentUser, refreshUser, onOpenChat }) {
   const [listings, setListings] = useState([]);
   const [openCreate, setOpenCreate] = useState(false);
 
+  // ✅ backend-aligned filters (pas de category dans ListingDTO)
   const [filters, setFilters] = useState({
-    category: "",
+    query: "",
     minPrice: "",
     maxPrice: "",
     onlyAvailable: false,
@@ -21,7 +22,7 @@ export default function MarketplaceSidebar({ currentUser, refreshUser }) {
 
   const [loading, setLoading] = useState(true);
 
-  const [toast, setToast] = useState(null);
+  const [toast, setToast] = useState(null); // { type: "success"|"error", msg }
   const toastOk = (msg) => {
     setToast({ type: "success", msg });
     setTimeout(() => setToast(null), 2500);
@@ -31,38 +32,64 @@ export default function MarketplaceSidebar({ currentUser, refreshUser }) {
     setTimeout(() => setToast(null), 3500);
   };
 
-  const loadListings = async () => {
-    setLoading(true);
+  const mountedRef = useRef(true);
+
+  const loadListings = async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     try {
       const data = await api.getListings();
-      setListings(data);
+      if (mountedRef.current) setListings(Array.isArray(data) ? data : []);
     } catch (e) {
-      toastErr(e?.message || "Impossible de charger les annonces");
+      if (!silent) toastErr(e?.message || "Impossible de charger les annonces");
     } finally {
-      setLoading(false);
+      if (!silent && mountedRef.current) setLoading(false);
     }
   };
 
   useEffect(() => {
+    mountedRef.current = true;
+
+    // initial load
     loadListings();
+
+    // ✅ auto-refresh (polling)
+    const id = setInterval(() => {
+      loadListings({ silent: true });
+    }, 10_000);
+
+    return () => {
+      mountedRef.current = false;
+      clearInterval(id);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const filteredListings = useMemo(() => {
-    let filtered = listings;
+    const q = filters.query.trim().toLowerCase();
+    const min = filters.minPrice === "" ? null : Number(filters.minPrice);
+    const max = filters.maxPrice === "" ? null : Number(filters.maxPrice);
 
-    if (filters.category) {
-      filtered = filtered.filter((l) =>
-        (l.category || "").toLowerCase().includes(filters.category.toLowerCase())
-      );
-    }
+    return (listings || [])
+      .filter((l) => {
+        if (!l) return false;
 
-    if (filters.minPrice) filtered = filtered.filter((l) => l.price >= Number(filters.minPrice));
-    if (filters.maxPrice) filtered = filtered.filter((l) => l.price <= Number(filters.maxPrice));
+        if (filters.onlyAvailable && l.status !== "AVAILABLE") return false;
 
-    if (filters.onlyAvailable) filtered = filtered.filter((l) => l.status === "AVAILABLE");
+        if (q) {
+          const hay = `${l.title || ""} ${l.description || ""}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
 
-    return filtered;
+        if (min != null && Number.isFinite(min) && (l.price ?? 0) < min) return false;
+        if (max != null && Number.isFinite(max) && (l.price ?? 0) > max) return false;
+
+        return true;
+      })
+      // optionnel: trier “AVAILABLE” d’abord
+      .sort((a, b) => {
+        const score = (s) => (s === "AVAILABLE" ? 0 : s === "PENDING" ? 1 : 2);
+        return score(a.status) - score(b.status);
+      });
   }, [listings, filters]);
 
   const handleCardAction = async (evt) => {
@@ -71,6 +98,7 @@ export default function MarketplaceSidebar({ currentUser, refreshUser }) {
         toastOk(`Statut mis à jour → ${evt.status}`);
         await loadListings();
 
+        // wallet refresh utile après paiement
         if (evt.status === "PAID" && refreshUser) {
           await refreshUser();
         }
@@ -78,7 +106,8 @@ export default function MarketplaceSidebar({ currentUser, refreshUser }) {
       }
 
       if (evt?.type === "chat") {
-        // ici tu peux router vers /messages
+        onOpenChat?.(evt.conversationId);
+        toastOk("Conversation ouverte 💬");
         return;
       }
     } catch (e) {
@@ -105,15 +134,20 @@ export default function MarketplaceSidebar({ currentUser, refreshUser }) {
       </CardHeader>
 
       <CardContent className="space-y-3 flex-1 overflow-y-auto">
-        <Button className="w-full" onClick={() => setOpenCreate(true)} disabled={!currentUser?.id}>
+        <Button
+          className="w-full"
+          onClick={() => setOpenCreate(true)}
+          disabled={!currentUser?.id}
+        >
           ➕ Nouvelle annonce
         </Button>
 
+        {/* FILTRES */}
         <div className="space-y-2 mb-4">
           <Input
-            placeholder="Catégorie"
-            value={filters.category}
-            onChange={(e) => setFilters({ ...filters, category: e.target.value })}
+            placeholder="Rechercher (titre / description)"
+            value={filters.query}
+            onChange={(e) => setFilters({ ...filters, query: e.target.value })}
           />
 
           <div className="flex gap-2">
@@ -142,18 +176,24 @@ export default function MarketplaceSidebar({ currentUser, refreshUser }) {
             <Label htmlFor="onlyAvailable">Disponible uniquement</Label>
           </div>
 
-          <Button onClick={loadListings} className="w-full" disabled={loading}>
+          <Button onClick={() => loadListings()} className="w-full" disabled={loading}>
             {loading ? "Chargement..." : "🔄 Rafraîchir"}
           </Button>
         </div>
 
+        {/* LISTINGS */}
         {loading ? (
           <p className="text-center text-gray-500">Chargement...</p>
         ) : filteredListings.length === 0 ? (
           <p className="text-center text-gray-400">Aucune annonce</p>
         ) : (
           filteredListings.map((l) => (
-            <ListingCard key={l.id} listing={l} currentUser={currentUser} onAction={handleCardAction} />
+            <ListingCard
+              key={l.id}
+              listing={l}
+              currentUser={currentUser}
+              onAction={handleCardAction}
+            />
           ))
         )}
       </CardContent>

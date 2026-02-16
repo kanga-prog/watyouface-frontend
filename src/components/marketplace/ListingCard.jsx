@@ -5,34 +5,36 @@ import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
 import { mediaUrl, defaultAvatar } from "../../utils/media";
 import { api } from "../../utils/api";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-} from "../ui/dialog";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "../ui/dialog";
 
 export default function ListingCard({ listing, currentUser, onAction }) {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
 
-  const imageUrl = listing.image
+  const imageUrl = listing?.image
     ? listing.image.startsWith("http")
       ? listing.image
       : mediaUrl(listing.image)
     : defaultAvatar;
 
   const meId = currentUser?.id;
-  const isSeller = meId === listing.sellerId;
-  const isBuyer = listing.buyerId != null && meId === listing.buyerId;
+  const isSeller = meId != null && meId === listing?.sellerId;
+  const isBuyer = listing?.buyerId != null && meId === listing.buyerId;
 
-  const status = listing.status; // AVAILABLE / PENDING / ACCEPTED / PAID / SHIPPED / RECEIVED / REFUSED
+  const status = listing?.status; // AVAILABLE / PENDING / ACCEPTED / PAID / SHIPPED / RECEIVED / REFUSED
 
   const handleChat = async () => {
     setLoading(true);
     try {
-      const conv = await api.getOrCreateConversation(listing.sellerId);
+      // ✅ si je suis le seller -> je veux parler à l'acheteur (s'il existe)
+      // ✅ sinon -> je parle au seller
+      const otherUserId = isSeller ? listing?.buyerId : listing?.sellerId;
+
+      if (!otherUserId) {
+        throw new Error("Aucun utilisateur à contacter pour ce listing.");
+      }
+
+      const conv = await api.getOrCreateConversation(otherUserId);
       onAction?.({ type: "chat", conversationId: conv.id, listing });
     } catch (e) {
       alert(e?.message || "Impossible d'ouvrir le chat.");
@@ -67,22 +69,19 @@ export default function ListingCard({ listing, currentUser, onAction }) {
         )}
 
         <CardHeader>
-          <CardTitle>{listing.title}</CardTitle>
-          <p className="text-gray-600 font-semibold">{listing.price} WUF</p>
+          <CardTitle>{listing?.title || "Sans titre"}</CardTitle>
+          <p className="text-gray-600 font-semibold">{listing?.price ?? 0} WUF</p>
         </CardHeader>
 
         <CardContent className="space-y-2">
           <div onClick={() => setOpen(true)} className="cursor-pointer">
             <Avatar className="w-full h-48">
-              <AvatarImage
-                src={imageUrl}
-                className="object-cover w-full h-full rounded-xl"
-              />
+              <AvatarImage src={imageUrl} className="object-cover w-full h-full rounded-xl" />
               <AvatarFallback>📦</AvatarFallback>
             </Avatar>
           </div>
 
-          <p className="text-gray-700">{listing.description}</p>
+          <p className="text-gray-700">{listing?.description || ""}</p>
 
           <div className="flex flex-wrap gap-2 mt-3">
             {/* BUYER */}
@@ -151,20 +150,26 @@ export default function ListingCard({ listing, currentUser, onAction }) {
                 🚚 Marquer expédié
               </Button>
             )}
+
+            {/* BONUS utile: permettre au seller d'ouvrir le chat une fois PENDING/ACCEPTED/PAID/SHIPPED */}
+            {isSeller && ["PENDING", "ACCEPTED", "PAID", "SHIPPED"].includes(status) && (
+              <Button size="sm" variant="outline" onClick={handleChat} disabled={loading || !listing?.buyerId}>
+                💬 Chat acheteur
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-3xl">
-          <VisuallyHidden>
-            <DialogTitle>Image de l’annonce</DialogTitle>
-            <DialogDescription>
-              Aperçu détaillé de l’image de l’annonce marketplace
-            </DialogDescription>
-          </VisuallyHidden>
+          {/* ✅ sr-only à la place de VisuallyHidden */}
+          <DialogTitle className="sr-only">Image de l’annonce</DialogTitle>
+          <DialogDescription className="sr-only">
+            Aperçu détaillé de l’image de l’annonce marketplace
+          </DialogDescription>
 
-          <img src={imageUrl} alt={listing.title} className="w-full rounded-xl" />
+          <img src={imageUrl} alt={listing?.title || "Image annonce"} className="w-full rounded-xl" />
         </DialogContent>
       </Dialog>
     </>
