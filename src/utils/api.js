@@ -304,5 +304,51 @@ export const api = {
       if (!res.ok) throw new Error(await parseError(res));
       return res.json(); // { userId, balance }
     },
+
+  // =========================
+  // 🛡️ ADMIN
+  // =========================
+  adminGetUsers: async () => {
+    const res = await fetch(`${API_BASE}/api/admin/users`, { headers: api.authHeader() });
+    if (!res.ok) throw new Error(await parseError(res));
+    return res.json();
+  },
+
+  adminSetUserRole: async (userId, role) => {
+    const res = await fetch(`${API_BASE}/api/admin/users/${userId}/role`, {
+      method: "PUT",
+      headers: api.jsonHeaders(),
+      body: JSON.stringify({ role }),
+    });
+    if (!res.ok) throw new Error(await parseError(res));
+    return res.json();
+  },
+
+  adminDeletePost: async (id) => {
+    const res = await fetch(`${API_BASE}/api/admin/posts/${id}`, {
+      method: "DELETE",
+      headers: api.authHeader(),
+    });
+    if (!res.ok) throw new Error(await parseError(res));
+    return res.json();
+  },
+
+  adminDeleteComment: async (id) => {
+    const res = await fetch(`${API_BASE}/api/admin/comments/${id}`, {
+      method: "DELETE",
+      headers: api.authHeader(),
+    });
+    if (!res.ok) throw new Error(await parseError(res));
+    return res.json();
+  },
+
+  adminDeleteListing: async (id) => {
+    const res = await fetch(`${API_BASE}/api/admin/listings/${id}`, {
+      method: "DELETE",
+      headers: api.authHeader(),
+    });
+    if (!res.ok) throw new Error(await parseError(res));
+    return res.json();
+  },
     
 };

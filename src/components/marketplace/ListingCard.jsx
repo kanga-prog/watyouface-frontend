@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
+// ⚠️ Ne pas utiliser <Avatar> pour des images produit (ça force rounded-full)
 import { mediaUrl, defaultAvatar } from "../../utils/media";
 import { api } from "../../utils/api";
 
@@ -75,10 +75,14 @@ export default function ListingCard({ listing, currentUser, onAction }) {
 
         <CardContent className="space-y-2">
           <div onClick={() => setOpen(true)} className="cursor-pointer">
-            <Avatar className="w-full h-48">
-              <AvatarImage src={imageUrl} className="object-cover w-full h-full rounded-xl" />
-              <AvatarFallback>📦</AvatarFallback>
-            </Avatar>
+            <div className="w-full h-48 rounded-xl overflow-hidden bg-gray-100">
+              <img
+                src={imageUrl}
+                alt={listing?.title || "listing"}
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+            </div>
           </div>
 
           <p className="text-gray-700">{listing?.description || ""}</p>

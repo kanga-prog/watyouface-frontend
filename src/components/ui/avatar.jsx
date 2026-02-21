@@ -3,6 +3,7 @@ import * as AvatarPrimitive from "@radix-ui/react-avatar";
 import { cn } from "@/lib/utils";
 
 const sizeMap = {
+  "2xs": "w-4 h-4",  // 16px (mini)
   xs: "w-6 h-6",    // 24px (petit badge)
   sm: "w-8 h-8",    // 32px (NAVBAR recommandé)
   md: "w-10 h-10",  // 40px (standard)

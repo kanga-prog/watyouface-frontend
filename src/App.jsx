@@ -6,7 +6,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
 import Contract from "./pages/Contract";
-import { mediaUrl, defaultAvatar } from "./utils/media";
+import Admin from "./pages/Admin";
 
 // Nouvelles pages à créer
 import Marketplace from "./pages/Marketplace";
@@ -17,16 +17,20 @@ export default function App() {
     <Router>
       <div className="min-h-screen bg-gray-100">
         <Navbar />
-        <Routes>
-          <Route path="/" element={<Home />} />           {/* Feed */}
-          <Route path="/marketplace" element={<Marketplace />} />
-          <Route path="/messages" element={<Messages />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/contract" element={<Contract />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        {/* ✅ Décale toutes les pages sous la navbar fixed (h-16 = 4rem) */}
+        <div className="pt-16">
+          <Routes>
+            <Route path="/" element={<Home />} />           {/* Feed */}
+            <Route path="/marketplace" element={<Marketplace />} />
+            <Route path="/messages" element={<Messages />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/contract" element={<Contract />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </div>
       </div>
     </Router>
   );
