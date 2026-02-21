@@ -115,11 +115,11 @@ export default function CreateListingDialog({ open, onOpenChange, onCreated }) {
           </div>
 
           <div className="space-y-2">
-            <Label>Image (URL ou /uploads/...)</Label>
+            <Label>Image (URL ou /media/...)</Label>
             <Input
               value={image}
               onChange={(e) => setImage(e.target.value)}
-              placeholder="/uploads/x.png"
+              placeholder="/media/x.png"
             />
           </div>
 

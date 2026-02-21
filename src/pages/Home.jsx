@@ -85,7 +85,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="pt-20 flex w-full h-screen bg-gray-50 overflow-hidden">
+    <div className="pt-16 flex w-full h-[calc(100vh-4rem)] bg-gray-50 overflow-hidden">
       <aside className="w-96 bg-white border-r flex flex-col">
         <div className="p-4 border-b font-bold shrink-0"></div>
 

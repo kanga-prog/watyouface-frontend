@@ -8,4 +8,4 @@ export const mediaUrl = (path) => {
 };
 
 export const defaultAvatar =
-  `${API_BASE}/uploads/avatars/default.png`;
+  `${API_BASE}/media/avatars/default.png`;

@@ -2,39 +2,45 @@ import { useState, useRef } from "react";
 import { api } from "../../utils/api";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
-import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
-import { mediaUrl, defaultAvatar } from "../../utils/media";
+import { defaultAvatar } from "../../utils/media";
 
 export default function CreatePostForm({ onPostCreated }) {
   const [content, setContent] = useState("");
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
-  const [fileType, setFileType] = useState(""); // "image", "video", "other"
+  const [fileType, setFileType] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef(null);
 
   const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
+    const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
 
-    // Déterminer le type de fichier
-    if (selectedFile.type.startsWith("image/")) setFileType("image");
-    else if (selectedFile.type.startsWith("video/")) setFileType("video");
-    else setFileType("other");
+    const type =
+      selectedFile.type.startsWith("image/") ? "image"
+      : selectedFile.type.startsWith("video/") ? "video"
+      : "other";
 
+    // cleanup preview précédent
+    if (preview && (fileType === "image" || fileType === "video")) {
+      URL.revokeObjectURL(preview);
+    }
+
+    setFileType(type);
     setFile(selectedFile);
 
-    // Prévisualisation uniquement pour image et vidéo
-    if (fileType === "image" || fileType === "video") {
-      const reader = new FileReader();
-      reader.onload = () => setPreview(reader.result);
-      reader.readAsDataURL(selectedFile);
+    if (type === "image" || type === "video") {
+      const url = URL.createObjectURL(selectedFile);
+      setPreview(url);
     } else {
       setPreview(null);
     }
   };
 
   const removeFile = () => {
+    if (preview && (fileType === "image" || fileType === "video")) {
+      URL.revokeObjectURL(preview);
+    }
     setFile(null);
     setPreview(null);
     setFileType("");
@@ -60,10 +66,8 @@ export default function CreatePostForm({ onPostCreated }) {
         return;
       }
 
-      // Reset
       setContent("");
       removeFile();
-
       if (onPostCreated) onPostCreated();
     } catch (err) {
       alert("Erreur réseau : " + err.message);
@@ -82,22 +86,32 @@ export default function CreatePostForm({ onPostCreated }) {
       />
 
       {file && (
-        <div className="mt-3 relative inline-block">
+        <div className="mt-3 relative w-full">
           {fileType === "image" && preview && (
-            <Avatar size="md">
-              <AvatarImage src={preview || defaultAvatar} />
-              <AvatarFallback>👤</AvatarFallback>
-            </Avatar>
+            <div className="w-full overflow-hidden rounded-lg border">
+              <img
+                src={preview || defaultAvatar}
+                alt="preview"
+                className="w-full max-h-64 object-contain"
+              />
+            </div>
           )}
 
           {fileType === "video" && preview && (
-            <video src={preview} controls className="max-h-64 rounded-lg" />
+            <div className="w-full overflow-hidden rounded-lg border">
+              <video
+                src={preview}
+                controls
+                preload="metadata"
+                className="w-full max-h-64 object-contain"
+              />
+            </div>
           )}
 
           {fileType === "other" && (
             <div className="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded">
               <span>📄</span>
-              <span>{file.name}</span>
+              <span className="break-all">{file.name}</span>
             </div>
           )}
 

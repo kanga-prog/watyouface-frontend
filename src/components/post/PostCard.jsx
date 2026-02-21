@@ -33,7 +33,7 @@ export default function PostCard({ post }) {
     <Card className="mb-6">
       {/* HEADER */}
       <div className="flex items-center gap-3 p-4">
-        <Avatar size="lg">
+        <Avatar size="xs">
           <AvatarImage src={avatarUrl} />
           <AvatarFallback>
             {post.author?.username?.[0]?.toUpperCase() || "👤"}
@@ -41,9 +41,7 @@ export default function PostCard({ post }) {
         </Avatar>
 
         <div>
-          <p className="text-sm font-semibold">
-            {post.author?.username}
-          </p>
+          <p className="text-sm font-semibold">{post.author?.username}</p>
           <p className="text-xs text-gray-500">
             {new Date(post.createdAt).toLocaleString()}
           </p>
@@ -51,11 +49,7 @@ export default function PostCard({ post }) {
       </div>
 
       {/* TEXTE */}
-      {post.content && (
-        <div className="px-4 pb-2 text-gray-800">
-          {post.content}
-        </div>
-      )}
+      {post.content && <div className="px-4 pb-2 text-gray-800">{post.content}</div>}
 
       {/* IMAGE */}
       {post.imageUrl && (
@@ -66,6 +60,18 @@ export default function PostCard({ post }) {
         />
       )}
 
+      {/* VIDEO ✅ */}
+      {post.videoUrl && (
+        <div className="w-full overflow-hidden rounded">
+          <video
+            src={mediaUrl(post.videoUrl)}
+            controls
+            preload="metadata"
+            className="w-full max-h-[500px] object-contain"
+          />
+        </div>
+      )}
+
       {/* ACTIONS */}
       <div className="flex justify-between px-4 py-2 border-t">
         <LikeButton
@@ -73,11 +79,7 @@ export default function PostCard({ post }) {
           initialLikeCount={post.likeCount}
           initialLiked={post.userHasLiked}
         />
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => setShowComments(!showComments)}
-        >
+        <Button size="sm" variant="ghost" onClick={() => setShowComments(!showComments)}>
           💬 {post.commentCount || 0}
         </Button>
       </div>
@@ -86,9 +88,7 @@ export default function PostCard({ post }) {
       {showComments && (
         <div className="px-4 py-3 bg-gray-50 border-t">
           {loadingComments ? (
-            <p className="text-sm text-gray-400 text-center">
-              Chargement…
-            </p>
+            <p className="text-sm text-gray-400 text-center">Chargement…</p>
           ) : (
             <>
               {comments.map((c) => (
