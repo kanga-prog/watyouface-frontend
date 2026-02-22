@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { api } from "../../utils/api";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -16,7 +16,7 @@ export default function CreateListingDialog({ open, onOpenChange, onCreated }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
-  const [image, setImage] = useState("");
+  const [image, setImage] = useState(""); // URL ou /media/...
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -33,13 +33,39 @@ export default function CreateListingDialog({ open, onOpenChange, onCreated }) {
     setPrice("");
     setImage("");
     setFile(null);
+    if (preview) URL.revokeObjectURL(preview);
     setPreview(null);
     setErr("");
+    setLoading(false);
   };
+
+  useEffect(() => {
+    // quand on ferme, on cleanup
+    if (!open) {
+      if (preview) URL.revokeObjectURL(preview);
+      setPreview(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const close = (v) => {
     onOpenChange(v);
     if (!v) reset();
+  };
+
+  const handleFile = (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+
+    if (!f.type.startsWith("image/")) {
+      setErr("Image uniquement");
+      return;
+    }
+
+    setErr("");
+    setFile(f);
+    if (preview) URL.revokeObjectURL(preview);
+    setPreview(URL.createObjectURL(f));
   };
 
   const submit = async () => {
@@ -51,24 +77,22 @@ export default function CreateListingDialog({ open, onOpenChange, onCreated }) {
 
     setLoading(true);
     try {
-      const created = file
-        ? await api.createListingMultipart(
-            (() => {
-              const fd = new FormData();
-              fd.append("title", title.trim());
-              fd.append("description", description.trim());
-              fd.append("price", String(Number(price)));
-              if (image.trim()) fd.append("image", image.trim());
-              fd.append("file", file);
-              return fd;
-            })()
-          )
-        : await api.createListing({
-            title: title.trim(),
-            description: description.trim(),
-            price: Number(price),
-            image: image.trim() ? image.trim() : null,
-          });
+      // 1) déterminer l'image finale
+      let finalImage = image.trim() ? image.trim() : null;
+
+      // si file présent => priorité upload
+      if (file) {
+        const { imageUrl } = await api.uploadMarketplaceImage(file);
+        finalImage = imageUrl; // ex: /media/marketplace/xxx.png
+      }
+
+      // 2) créer l'annonce en JSON (cohérent, simple, fiable)
+      const created = await api.createListing({
+        title: title.trim(),
+        description: description.trim(),
+        price: Number(price),
+        image: finalImage,
+      });
 
       onCreated?.(created);
       close(false);
@@ -79,17 +103,11 @@ export default function CreateListingDialog({ open, onOpenChange, onCreated }) {
     }
   };
 
-  const handleFile = (e) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    if (!f.type.startsWith("image/")) {
-      setErr("Image uniquement");
-      return;
-    }
-    setErr("");
-    setFile(f);
-    setPreview(URL.createObjectURL(f));
-  };
+  const previewSrc = preview
+    ? preview
+    : image.trim()
+      ? (image.trim().startsWith("http") ? image.trim() : mediaUrl(image.trim()))
+      : defaultAvatar;
 
   return (
     <Dialog open={open} onOpenChange={close}>
@@ -149,25 +167,17 @@ export default function CreateListingDialog({ open, onOpenChange, onCreated }) {
               <p className="text-sm font-semibold mb-2">Aperçu</p>
 
               <div className="w-full h-48 rounded-lg overflow-hidden bg-white border flex items-center justify-center">
-                {preview ? (
-                  <img src={preview} alt="preview" className="w-full h-full object-contain" />
-                ) : image.trim() ? (
-                  <img
-                    src={image.trim().startsWith("http") ? image.trim() : mediaUrl(image.trim())}
-                    alt="preview"
-                    className="w-full h-full object-contain"
-                  />
-                ) : (
-                  <img src={defaultAvatar} alt="placeholder" className="w-24 h-24 opacity-60" />
-                )}
+                <img
+                  src={previewSrc}
+                  alt="preview"
+                  className={previewSrc === defaultAvatar ? "w-24 h-24 opacity-60" : "w-full h-full object-contain"}
+                />
               </div>
 
               <div className="mt-3 space-y-2">
                 <Label>Image (upload)</Label>
                 <Input type="file" accept="image/*" onChange={handleFile} />
-                {file && (
-                  <p className="text-xs text-gray-500 truncate">{file.name}</p>
-                )}
+                {file && <p className="text-xs text-gray-500 truncate">{file.name}</p>}
               </div>
             </div>
 
@@ -178,7 +188,7 @@ export default function CreateListingDialog({ open, onOpenChange, onCreated }) {
                 <Input
                   value={image}
                   onChange={(e) => setImage(e.target.value)}
-                  placeholder="/media/listings/x.png"
+                  placeholder="/media/marketplace/x.png"
                 />
                 <p className="text-xs text-gray-500">
                   Optionnel : si tu upload une image, elle prendra priorité.

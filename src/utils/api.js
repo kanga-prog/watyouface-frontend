@@ -303,9 +303,20 @@ export const api = {
     if (!res.ok) throw new Error(await parseError(res));
     return res.json(); // {message:"Annonce supprimée"}
   },
+ uploadMarketplaceImage: async (file) => {
+    const fd = new FormData();
+    fd.append("file", file);
 
+    const res = await fetch(`${API_BASE}/api/marketplace/listings/upload`, {
+      method: "POST",
+      headers: api.authHeader(),
+      body: fd,
+    });
 
-
+    if (!res.ok) throw new Error(await parseError(res));
+    return res.json(); // { imageUrl: "/media/marketplace/xxx.png" }
+  },
+  
      // =========================
       // 🏪 WALLET
      // =========================
