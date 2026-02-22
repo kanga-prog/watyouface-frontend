@@ -18,22 +18,19 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 h-16 bg-blue-700 shadow">
-      <div className="h-full flex justify-between items-center px-4">
+    <nav
+      className="fixed top-0 left-0 right-0 z-[2147483647] isolate h-16 bg-blue-700 shadow"
+      style={{ position: "fixed" }}
+    >
+      <div className="h-full flex items-center justify-between px-4">
+        {/* Brand */}
         <Link to="/" className="text-white font-bold">
           WatYouFace🎭
         </Link>
 
+        {/* Actions */}
         {token && (
-          <div className="flex items-center gap-3">
-            {/* ✅ avatar petit + ne rétrécit pas */}
-            <Avatar size="2xs" className="shrink-0">
-              <AvatarImage src={avatarSrc(avatarUrl)} />
-              <AvatarFallback>
-                {username?.charAt(0)?.toUpperCase() || "👤"}
-              </AvatarFallback>
-            </Avatar>
-
+          <div className="flex items-center gap-3 ml-auto">
             <span className="text-white text-sm max-w-[10rem] truncate">
               {username}
             </span>
@@ -48,9 +45,20 @@ export default function Navbar() {
               </Link>
             )}
 
-            <button onClick={handleLogout} className="text-red-200 text-sm hover:underline">
+            <button
+              onClick={handleLogout}
+              className="text-red-200 text-sm hover:underline"
+            >
               Déconnexion
             </button>
+
+            {/* Avatar tout à droite */}
+            <Avatar size="nav" className="shrink-0 ml-2">
+              <AvatarImage src={avatarSrc(avatarUrl)} />
+              <AvatarFallback>
+                {username?.charAt(0)?.toUpperCase() || "👤"}
+              </AvatarFallback>
+            </Avatar>
           </div>
         )}
       </div>

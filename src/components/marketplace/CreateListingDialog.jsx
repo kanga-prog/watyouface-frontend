@@ -3,6 +3,7 @@ import { api } from "../../utils/api";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+import { defaultAvatar, mediaUrl } from "../../utils/media";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +17,8 @@ export default function CreateListingDialog({ open, onOpenChange, onCreated }) {
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [image, setImage] = useState("");
+  const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
 
@@ -29,6 +32,8 @@ export default function CreateListingDialog({ open, onOpenChange, onCreated }) {
     setDescription("");
     setPrice("");
     setImage("");
+    setFile(null);
+    setPreview(null);
     setErr("");
   };
 
@@ -46,12 +51,24 @@ export default function CreateListingDialog({ open, onOpenChange, onCreated }) {
 
     setLoading(true);
     try {
-      const created = await api.createListing({
-        title: title.trim(),
-        description: description.trim(),
-        price: Number(price),
-        image: image.trim() ? image.trim() : null,
-      });
+      const created = file
+        ? await api.createListingMultipart(
+            (() => {
+              const fd = new FormData();
+              fd.append("title", title.trim());
+              fd.append("description", description.trim());
+              fd.append("price", String(Number(price)));
+              if (image.trim()) fd.append("image", image.trim());
+              fd.append("file", file);
+              return fd;
+            })()
+          )
+        : await api.createListing({
+            title: title.trim(),
+            description: description.trim(),
+            price: Number(price),
+            image: image.trim() ? image.trim() : null,
+          });
 
       onCreated?.(created);
       close(false);
@@ -62,9 +79,21 @@ export default function CreateListingDialog({ open, onOpenChange, onCreated }) {
     }
   };
 
+  const handleFile = (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (!f.type.startsWith("image/")) {
+      setErr("Image uniquement");
+      return;
+    }
+    setErr("");
+    setFile(f);
+    setPreview(URL.createObjectURL(f));
+  };
+
   return (
     <Dialog open={open} onOpenChange={close}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-2xl">
         <VisuallyHidden>
           <DialogTitle>Créer une annonce</DialogTitle>
           <DialogDescription>
@@ -114,22 +143,57 @@ export default function CreateListingDialog({ open, onOpenChange, onCreated }) {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Image (URL ou /media/...)</Label>
-            <Input
-              value={image}
-              onChange={(e) => setImage(e.target.value)}
-              placeholder="/media/x.png"
-            />
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* PREVIEW */}
+            <div className="rounded-xl border bg-gray-50 p-3">
+              <p className="text-sm font-semibold mb-2">Aperçu</p>
 
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => close(false)} disabled={loading}>
-              Annuler
-            </Button>
-            <Button onClick={submit} disabled={loading || !canSubmit}>
-              {loading ? "Création..." : "Créer"}
-            </Button>
+              <div className="w-full h-48 rounded-lg overflow-hidden bg-white border flex items-center justify-center">
+                {preview ? (
+                  <img src={preview} alt="preview" className="w-full h-full object-contain" />
+                ) : image.trim() ? (
+                  <img
+                    src={image.trim().startsWith("http") ? image.trim() : mediaUrl(image.trim())}
+                    alt="preview"
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <img src={defaultAvatar} alt="placeholder" className="w-24 h-24 opacity-60" />
+                )}
+              </div>
+
+              <div className="mt-3 space-y-2">
+                <Label>Image (upload)</Label>
+                <Input type="file" accept="image/*" onChange={handleFile} />
+                {file && (
+                  <p className="text-xs text-gray-500 truncate">{file.name}</p>
+                )}
+              </div>
+            </div>
+
+            {/* FIELDS */}
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label>Image (URL ou /media/...)</Label>
+                <Input
+                  value={image}
+                  onChange={(e) => setImage(e.target.value)}
+                  placeholder="/media/listings/x.png"
+                />
+                <p className="text-xs text-gray-500">
+                  Optionnel : si tu upload une image, elle prendra priorité.
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => close(false)} disabled={loading}>
+                  Annuler
+                </Button>
+                <Button onClick={submit} disabled={loading || !canSubmit}>
+                  {loading ? "Création..." : "Créer"}
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </DialogContent>

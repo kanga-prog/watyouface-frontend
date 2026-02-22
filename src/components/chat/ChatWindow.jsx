@@ -88,7 +88,7 @@ export default function ChatWindow({ convId, jwtToken, username }) {
                 }`}
               >
                 {!isOwn && (
-                  <Avatar size="md">
+                  <Avatar size="chat" className="shrink-0">
                     <AvatarImage src={avatar} />
                     <AvatarFallback>👤</AvatarFallback>
                   </Avatar>
@@ -114,7 +114,7 @@ export default function ChatWindow({ convId, jwtToken, username }) {
                 </div>
 
                 {isOwn && (
-                  <Avatar className="w-6 h-6 ml-2 shrink-0">
+                  <Avatar size="chat" className="shrink-0">
                     <AvatarImage src={avatar} />
                     <AvatarFallback>👤</AvatarFallback>
                   </Avatar>

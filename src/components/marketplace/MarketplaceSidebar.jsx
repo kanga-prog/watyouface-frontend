@@ -176,9 +176,7 @@ export default function MarketplaceSidebar({ currentUser, refreshUser, onOpenCha
             <Label htmlFor="onlyAvailable">Disponible uniquement</Label>
           </div>
 
-          <Button onClick={() => loadListings()} className="w-full" disabled={loading}>
-            {loading ? "Chargement..." : "🔄 Rafraîchir"}
-          </Button>
+          {/* Suppression du bouton “Rafraîchir” (doublon). Le refresh se fait après création/action. */}
         </div>
 
         {/* LISTINGS */}

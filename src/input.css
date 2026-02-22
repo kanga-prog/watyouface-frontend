@@ -1,12 +1,10 @@
 /* ============================= */
-/* 1️⃣ Imports externes */
-@import "tw-animate-css";
+/* 1️⃣ Tailwind v4 (import unique) */
+@import "tailwindcss";
 
 /* ============================= */
-/* 2️⃣ Directives Tailwind obligatoires */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* 2️⃣ Imports externes */
+@import "tw-animate-css";
 
 /* ============================= */
 /* 3️⃣ Plugins et custom variants */

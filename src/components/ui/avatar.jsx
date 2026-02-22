@@ -3,12 +3,13 @@ import * as AvatarPrimitive from "@radix-ui/react-avatar";
 import { cn } from "@/lib/utils";
 
 const sizeMap = {
-  "2xs": "w-4 h-4",  // 16px (mini)
-  xs: "w-6 h-6",    // 24px (petit badge)
-  sm: "w-8 h-8",    // 32px (NAVBAR recommandé)
-  md: "w-10 h-10",  // 40px (standard)
-  lg: "w-12 h-12",  // 48px (cards / profil compact)
-  xl: "w-16 h-16",  // 64px (max conseillé, hors “profil géant”)
+  nav: "w-4 h-4",   // 16px navbar
+  chat: "w-6 h-6",  // 24px chat (÷3 vs 72px typique)
+  xs: "w-6 h-6",
+  sm: "w-8 h-8",
+  md: "w-10 h-10",
+  lg: "w-12 h-12",
+  xl: "w-16 h-16",
 };
 
 const Avatar = React.forwardRef(({ className, size = "md", ...props }, ref) => (

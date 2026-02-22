@@ -227,6 +227,17 @@ export const api = {
     return res.json();
   },
 
+  // multipart (image upload)
+  createListingMultipart: async (formData) => {
+    const res = await fetch(`${API_BASE}/api/marketplace/listings`, {
+      method: "POST",
+      headers: api.authHeader(),
+      body: formData,
+    });
+    if (!res.ok) throw new Error(await parseError(res));
+    return res.json();
+  },
+
   requestPurchase: async (listingId) => {
     const res = await fetch(`${API_BASE}/api/marketplace/listings/${listingId}/request`, {
       method: "POST",
@@ -308,8 +319,15 @@ export const api = {
   // =========================
   // 🛡️ ADMIN
   // =========================
-  adminGetUsers: async () => {
-    const res = await fetch(`${API_BASE}/api/admin/users`, { headers: api.authHeader() });
+  adminGetUsers: async ({ query = "", page = 0, size = 20 } = {}) => {
+    const qs = new URLSearchParams();
+    if (query) qs.set("query", query);
+    qs.set("page", String(page));
+    qs.set("size", String(size));
+
+    const res = await fetch(`${API_BASE}/api/admin/users?${qs.toString()}`, {
+      headers: api.authHeader(),
+    });
     if (!res.ok) throw new Error(await parseError(res));
     return res.json();
   },

@@ -15,6 +15,12 @@ export default function Admin() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [query, setQuery] = useState("");
+  const [page, setPage] = useState(0);
+  const size = 20;
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+
   const [deletePostId, setDeletePostId] = useState("");
   const [deleteCommentId, setDeleteCommentId] = useState("");
   const [deleteListingId, setDeleteListingId] = useState("");
@@ -25,19 +31,36 @@ export default function Admin() {
 
     (async () => {
       try {
-        const data = await api.adminGetUsers();
-        setUsers(Array.isArray(data) ? data : []);
+        const data = await api.adminGetUsers({ query, page, size });
+        const content = Array.isArray(data) ? data : data.content;
+        setUsers(Array.isArray(content) ? content : []);
+        setTotalPages(data?.totalPages ?? 0);
+        setTotalElements(data?.totalElements ?? 0);
       } catch (e) {
         setError(e?.message || "Erreur admin");
       } finally {
         setLoading(false);
       }
     })();
-  }, [token, role, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, role, navigate, page]);
 
-  const refreshUsers = async () => {
-    const data = await api.adminGetUsers();
-    setUsers(Array.isArray(data) ? data : []);
+  // recherche (debounce)
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setPage(0);
+      refreshUsers({ q: query, p: 0 });
+    }, 250);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query]);
+
+  const refreshUsers = async ({ q = query, p = page } = {}) => {
+    const data = await api.adminGetUsers({ query: q, page: p, size });
+    const content = Array.isArray(data) ? data : data.content;
+    setUsers(Array.isArray(content) ? content : []);
+    setTotalPages(data?.totalPages ?? 0);
+    setTotalElements(data?.totalElements ?? 0);
   };
 
   const setRole = async (userId, nextRole) => {
@@ -76,6 +99,16 @@ export default function Admin() {
 
       <Card className="p-4">
         <h2 className="font-semibold mb-3">Utilisateurs</h2>
+
+        <div className="flex flex-col md:flex-row gap-2 md:items-center md:justify-between mb-3">
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Recherche username / email"
+            className="md:max-w-md"
+          />
+          <div className="text-xs text-gray-600">{totalElements} utilisateur(s)</div>
+        </div>
 
         {loading ? (
           <p>Chargement…</p>
@@ -122,6 +155,32 @@ export default function Admin() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {!loading && totalPages > 1 && (
+          <div className="flex items-center justify-between pt-3">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 0}
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+            >
+              ← Précédent
+            </Button>
+
+            <div className="text-xs text-gray-600">
+              Page {page + 1} / {totalPages}
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages - 1}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Suivant →
+            </Button>
           </div>
         )}
       </Card>

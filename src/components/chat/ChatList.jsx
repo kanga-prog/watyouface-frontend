@@ -41,7 +41,7 @@ export default function ChatList({
             }`}
           >
             {!isGroup ? (
-              <Avatar size="md">
+              <Avatar size="chat" className="shrink-0">
                 <AvatarImage src={avatarSrc(otherUser?.avatarUrl)} />
                 <AvatarFallback>👤</AvatarFallback>
               </Avatar>
@@ -75,7 +75,7 @@ export default function ChatList({
               onClick={() => onAvatarClick(user.id)}
               className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-gray-100 mb-1"
             >
-              <Avatar size="md">
+              <Avatar size="chat" className="shrink-0">
                 <AvatarImage src={avatarSrc(user.avatarUrl)} />
                 <AvatarFallback>👤</AvatarFallback>
               </Avatar>
