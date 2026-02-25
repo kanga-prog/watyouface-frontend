@@ -24,3 +24,9 @@ export function getJwtRole(token) {
   const payload = decodeJwt(token);
   return payload?.role || null;
 }
+
+export function getJwtUserId(token) {
+  const payload = decodeJwt(token);
+  const v = payload?.userId;
+  return typeof v === "number" ? v : v != null ? Number(v) : null;
+}

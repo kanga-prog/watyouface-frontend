@@ -29,9 +29,10 @@ export const api = {
   // 🔐 TOKEN
   getToken: () => localStorage.getItem("token"),
 
-  authHeader: () => ({
-    Authorization: `Bearer ${api.getToken()}`,
-  }),
+  authHeader: () => {
+    const t = api.getToken();
+    return t ? { Authorization: `Bearer ${t}` } : {};
+  },
 
   jsonHeaders: () => ({
     ...api.authHeader(),
@@ -68,6 +69,19 @@ export const api = {
       method: "POST",
       headers: api.authHeader(),
       body: formData,
+    }),
+
+  updatePost: (id, payload) =>
+    fetch(`${API_BASE}/api/posts/${id}`, {
+      method: "PUT",
+      headers: api.jsonHeaders(),
+      body: JSON.stringify(payload),
+    }),
+
+  deletePost: (id) =>
+    fetch(`${API_BASE}/api/posts/${id}`, {
+      method: "DELETE",
+      headers: api.authHeader(),
     }),
 
   // =========================
@@ -326,6 +340,16 @@ export const api = {
       if (!res.ok) throw new Error(await parseError(res));
       return res.json(); // { userId, balance }
     },
+
+  creditMyWallet: async (amount) => {
+    const res = await fetch(`${API_BASE}/api/wallet/me/credit`, {
+      method: "POST",
+      headers: api.jsonHeaders(),
+      body: JSON.stringify({ amount }),
+    });
+    if (!res.ok) throw new Error(await parseError(res));
+    return res.json(); // { userId, balance }
+  },
 
   // =========================
   // 🛡️ ADMIN

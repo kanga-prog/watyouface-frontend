@@ -5,11 +5,14 @@ import { Button } from "../ui/button";
 import { mediaUrl, defaultAvatar } from "../../utils/media";
 import { api } from "../../utils/api";
 
+import EditListingDialog from "./EditListingDialog";
+
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "../ui/dialog";
 
 export default function ListingCard({ listing, currentUser, onAction }) {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
 
   const imageUrl = listing?.image
     ? listing.image.startsWith("http")
@@ -88,6 +91,26 @@ export default function ListingCard({ listing, currentUser, onAction }) {
           <p className="text-gray-700">{listing?.description || ""}</p>
 
           <div className="flex flex-wrap gap-2 mt-3">
+            {/* CRUD SELLER (AVAILABLE/PENDING uniquement) */}
+            {isSeller && ["AVAILABLE", "PENDING"].includes(status) && (
+              <>
+                <Button size="sm" variant="outline" onClick={() => setOpenEdit(true)} disabled={loading}>
+                  ✏️ Modifier
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={async () => {
+                    if (!confirm("Supprimer cette annonce ?")) return;
+                    await doAction(() => api.deleteListing(listing.id), "DELETED");
+                  }}
+                  disabled={loading}
+                >
+                  🗑️ Supprimer
+                </Button>
+              </>
+            )}
+
             {/* BUYER */}
             {!isSeller && status === "AVAILABLE" && (
               <>
@@ -176,6 +199,15 @@ export default function ListingCard({ listing, currentUser, onAction }) {
           <img src={imageUrl} alt={listing?.title || "Image annonce"} className="w-full rounded-xl" />
         </DialogContent>
       </Dialog>
+
+      <EditListingDialog
+        open={openEdit}
+        onOpenChange={setOpenEdit}
+        listing={listing}
+        onSaved={() => {
+          onAction?.({ type: "update", listingId: listing.id, status });
+        }}
+      />
     </>
   );
 }

@@ -111,7 +111,14 @@ export default function Home() {
           ) : posts.length === 0 ? (
             <p className="text-center text-gray-500">Aucun post</p>
           ) : (
-            posts.map((post) => <PostCard key={post.id} post={post} />)
+            posts.map((post) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                currentUser={currentUser}
+                onChanged={loadPosts}
+              />
+            ))
           )}
         </div>
       </main>

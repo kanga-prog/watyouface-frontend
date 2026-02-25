@@ -30,7 +30,7 @@ export default function LoginForm() {
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("username", data.username);
-      localStorage.setItem("avatarUrl", data.avatarUrl);
+      localStorage.setItem("avatarUrl", data.avatarUrl ?? "");
       setMessage("✅ Connexion réussie !");
       navigate("/");
     } catch (err) {

@@ -3,8 +3,8 @@ import * as AvatarPrimitive from "@radix-ui/react-avatar";
 import { cn } from "@/lib/utils";
 
 const sizeMap = {
-  nav: "w-4 h-4",   // 16px navbar
-  chat: "w-6 h-6",  // 24px chat (÷3 vs 72px typique)
+  nav: "w-8 h-8", 
+  chat: "w-6 h-6",
   xs: "w-6 h-6",
   sm: "w-8 h-8",
   md: "w-10 h-10",

@@ -7,16 +7,27 @@ import CommentItem from "./CommentItem";
 import CommentForm from "./CommentForm";
 import { api } from "../../utils/api";
 import { mediaUrl, defaultAvatar } from "../../utils/media";
+import { getJwtRole, getJwtUserId } from "../../utils/jwt";
 
 // helper standard
 const avatarSrc = (url) => (url ? mediaUrl(url) : defaultAvatar);
 
-export default function PostCard({ post }) {
+export default function PostCard({ post, currentUser, onChanged }) {
   const [comments, setComments] = useState([]);
   const [showComments, setShowComments] = useState(false);
   const [loadingComments, setLoadingComments] = useState(false);
 
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(post.content || "");
+  const [saving, setSaving] = useState(false);
+
   const avatarUrl = avatarSrc(post.author?.avatarUrl);
+
+  const token = localStorage.getItem("token");
+  const meId = currentUser?.id ?? getJwtUserId(token);
+  const role = (currentUser?.role ?? getJwtRole(token) ?? "USER").toString();
+  const isAdmin = role === "ADMIN";
+  const isOwner = meId != null && post.author?.id != null && meId === post.author.id;
 
   useEffect(() => {
     if (!showComments || comments.length) return;
@@ -46,10 +57,69 @@ export default function PostCard({ post }) {
             {new Date(post.createdAt).toLocaleString()}
           </p>
         </div>
+
+        {(isOwner || isAdmin) && (
+          <div className="ml-auto flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
+              ✏️
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={async () => {
+                if (!confirm("Supprimer ce post ?")) return;
+                await api.deletePost(post.id);
+                onChanged?.();
+              }}
+            >
+              🗑️
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* TEXTE */}
-      {post.content && <div className="px-4 pb-2 text-gray-800">{post.content}</div>}
+      {editing ? (
+        <div className="px-4 pb-2 space-y-2">
+          <textarea
+            className="w-full border rounded p-2"
+            rows={3}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+          />
+          <div className="flex gap-2 justify-end">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setDraft(post.content || "");
+                setEditing(false);
+              }}
+              disabled={saving}
+            >
+              Annuler
+            </Button>
+            <Button
+              size="sm"
+              onClick={async () => {
+                setSaving(true);
+                try {
+                  await api.updatePost(post.id, { content: draft });
+                  setEditing(false);
+                  onChanged?.();
+                } finally {
+                  setSaving(false);
+                }
+              }}
+              disabled={saving}
+            >
+              {saving ? "..." : "Sauver"}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        post.content && <div className="px-4 pb-2 text-gray-800">{post.content}</div>
+      )}
 
       {/* IMAGE */}
       {post.imageUrl && (

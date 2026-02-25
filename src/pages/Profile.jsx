@@ -12,10 +12,7 @@ export default function Profile() {
   const [editingUsername, setEditingUsername] = useState(false);
   const [newUsername, setNewUsername] = useState("");
 
-  const [bio, setBio] = useState("");
-  const [editingBio, setEditingBio] = useState(false);
-
-  const [links, setLinks] = useState({ github: "", linkedin: "" });
+  // NB: Le backend actuel ne gère pas bio/github/linkedin.
 
   const [activeContractId, setActiveContractId] = useState(null);
   const [loadingContract, setLoadingContract] = useState(true);
@@ -38,11 +35,6 @@ export default function Profile() {
       .then((data) => {
         setUser(data);
         setNewUsername(data.username);
-        setBio(data.bio || "");
-        setLinks({
-          github: data.github || "",
-          linkedin: data.linkedin || "",
-        });
       })
       .catch(() => navigate("/login"));
   }, [navigate]);
@@ -69,12 +61,7 @@ export default function Profile() {
     setSaving(false);
   };
 
-  const handleProfileSave = async () => {
-    setSaving(true);
-    await api.updateProfile({ bio, ...links });
-    setEditingBio(false);
-    setSaving(false);
-  };
+  // Pas d'update bio/links pour l'instant.
 
   const handleAvatarUpload = (avatarUrl) => {
     setUser((u) => ({ ...u, avatarUrl }));
@@ -101,9 +88,9 @@ export default function Profile() {
     if (!walletAmount || Number(walletAmount) <= 0) return;
     setRecharging(true);
     try {
-      await api.rechargeWallet(user.id, Number(walletAmount));
+      await api.creditMyWallet(Number(walletAmount));
       setWalletAmount("");
-      // reload user to update wallet balance
+      // reload user to update wallet balance (walletBalance renvoyé par /users/me)
       const updatedUser = await api.getProfile();
       setUser(updatedUser);
     } catch (err) {
@@ -132,19 +119,6 @@ export default function Profile() {
           <div className="flex-1 space-y-1">
             <h2 className="text-2xl font-bold">{user.username}</h2>
             <p className="text-sm text-gray-500">{user.email}</p>
-
-            <p className="text-gray-700 text-sm">
-              {bio || "Ajoutez une courte biographie"}
-            </p>
-
-            <div className="flex gap-4 text-sm text-blue-600">
-              {links.github && (
-                <a href={links.github} target="_blank">GitHub</a>
-              )}
-              {links.linkedin && (
-                <a href={links.linkedin} target="_blank">LinkedIn</a>
-              )}
-            </div>
           </div>
 
           <AvatarUpload
@@ -156,7 +130,9 @@ export default function Profile() {
         {/* ===== WALLET ===== */}
         <section className="bg-white p-6 rounded shadow space-y-3">
           <h2 className="text-xl font-semibold">💰 Wallet</h2>
-          <p>Solde : <span className="font-bold">{user.wallet || 0} WUF</span></p>
+          <p>
+            Solde : <span className="font-bold">{user.walletBalance ?? 0} WUF</span>
+          </p>
 
           <div className="flex gap-2 mt-2">
             <input
@@ -199,55 +175,6 @@ export default function Profile() {
               ✏️ Modifier le pseudo
             </Button>
           )}
-        </section>
-
-        {/* ===== BIO ===== */}
-        <section className="bg-white p-6 rounded shadow space-y-3">
-          <h2 className="text-xl font-semibold">📝 À propos</h2>
-
-          {editingBio ? (
-            <>
-              <textarea
-                className="w-full border p-2 rounded"
-                rows={3}
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-              />
-              <Button size="sm" onClick={handleProfileSave} disabled={saving}>
-                💾 Sauvegarder
-              </Button>
-            </>
-          ) : (
-            <>
-              <p>{bio || "Aucune biographie."}</p>
-              <Button variant="ghost" size="sm" onClick={() => setEditingBio(true)}>
-                ✏️ Modifier
-              </Button>
-            </>
-          )}
-        </section>
-
-        {/* ===== LIENS ===== */}
-        <section className="bg-white p-6 rounded shadow space-y-3">
-          <h2 className="text-xl font-semibold">🌐 Liens</h2>
-
-          <input
-            placeholder="GitHub"
-            className="border p-2 w-full rounded"
-            value={links.github}
-            onChange={(e) => setLinks({ ...links, github: e.target.value })}
-          />
-
-          <input
-            placeholder="LinkedIn"
-            className="border p-2 w-full rounded"
-            value={links.linkedin}
-            onChange={(e) => setLinks({ ...links, linkedin: e.target.value })}
-          />
-
-          <Button size="sm" onClick={handleProfileSave} disabled={saving}>
-            💾 Sauvegarder
-          </Button>
         </section>
 
         {/* ===== DOCUMENTS ===== */}
