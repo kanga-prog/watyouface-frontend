@@ -6,6 +6,7 @@ import { mediaUrl, defaultAvatar } from "../../utils/media";
 import { api } from "../../utils/api";
 
 import EditListingDialog from "./EditListingDialog";
+import ListingStatusBadge from "./ListingStatusBadge";
 
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "../ui/dialog";
 
@@ -13,6 +14,7 @@ export default function ListingCard({ listing, currentUser, onAction }) {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
+  const [error, setError] = useState(null);
 
   const imageUrl = listing?.image
     ? listing.image.startsWith("http")
@@ -28,6 +30,7 @@ export default function ListingCard({ listing, currentUser, onAction }) {
 
   const handleChat = async () => {
     setLoading(true);
+    setError(null);
     try {
       // ✅ si je suis le seller -> je veux parler à l'acheteur (s'il existe)
       // ✅ sinon -> je parle au seller
@@ -39,8 +42,8 @@ export default function ListingCard({ listing, currentUser, onAction }) {
 
       const conv = await api.getOrCreateConversation(otherUserId);
       onAction?.({ type: "chat", conversationId: conv.id, listing });
-    } catch (e) {
-      alert(e?.message || "Impossible d'ouvrir le chat.");
+    } catch {
+      setError("Impossible d’ouvrir la conversation. Réessayez plus tard.");
     } finally {
       setLoading(false);
     }
@@ -48,11 +51,12 @@ export default function ListingCard({ listing, currentUser, onAction }) {
 
   const doAction = async (fn, nextStatus) => {
     setLoading(true);
+    setError(null);
     try {
       await fn();
       onAction?.({ type: "update", listingId: listing.id, status: nextStatus });
-    } catch (e) {
-      alert(e?.message || "Erreur action marketplace");
+    } catch {
+      setError("Cette action marketplace n’a pas pu être réalisée.");
     } finally {
       setLoading(false);
     }
@@ -61,8 +65,8 @@ export default function ListingCard({ listing, currentUser, onAction }) {
   return (
     <>
       <Card className="rounded-2xl shadow-lg relative">
-        <div className="absolute top-2 right-2 text-xs px-2 py-1 rounded-full bg-gray-100 border">
-          {status}
+        <div className="absolute top-2 right-2">
+          <ListingStatusBadge status={status} />
         </div>
 
         {["PAID", "SHIPPED", "RECEIVED"].includes(status) && (
@@ -73,20 +77,20 @@ export default function ListingCard({ listing, currentUser, onAction }) {
 
         <CardHeader>
           <CardTitle>{listing?.title || "Sans titre"}</CardTitle>
-          <p className="text-gray-600 font-semibold">{listing?.price ?? 0} WUF</p>
+          <p className="text-gray-600 font-semibold">{listing?.price ?? 0} crédits démo</p>
         </CardHeader>
 
         <CardContent className="space-y-2">
-          <div onClick={() => setOpen(true)} className="cursor-pointer">
+          <button type="button" onClick={() => setOpen(true)} className="block w-full text-left" aria-label={`Agrandir l’image de ${listing?.title || "l’annonce"}`}>
             <div className="w-full h-48 rounded-xl overflow-hidden bg-gray-100">
               <img
                 src={imageUrl}
-                alt={listing?.title || "listing"}
+                alt={listing?.title ? `Illustration de l’annonce ${listing.title}` : "Illustration de l’annonce"}
                 className="w-full h-full object-cover"
                 loading="lazy"
               />
             </div>
-          </div>
+          </button>
 
           <p className="text-gray-700">{listing?.description || ""}</p>
 
@@ -115,7 +119,7 @@ export default function ListingCard({ listing, currentUser, onAction }) {
             {!isSeller && status === "AVAILABLE" && (
               <>
                 <Button size="sm" onClick={handleChat} disabled={loading}>
-                  💬 Chat
+                  Contacter le vendeur
                 </Button>
                 <Button
                   size="sm"
@@ -133,7 +137,7 @@ export default function ListingCard({ listing, currentUser, onAction }) {
                 onClick={() => doAction(() => api.payListing(listing.id), "PAID")}
                 disabled={loading}
               >
-                💳 Payer
+                Payer avec le wallet de démonstration
               </Button>
             )}
 
@@ -181,10 +185,12 @@ export default function ListingCard({ listing, currentUser, onAction }) {
             {/* BONUS utile: permettre au seller d'ouvrir le chat une fois PENDING/ACCEPTED/PAID/SHIPPED */}
             {isSeller && ["PENDING", "ACCEPTED", "PAID", "SHIPPED"].includes(status) && (
               <Button size="sm" variant="outline" onClick={handleChat} disabled={loading || !listing?.buyerId}>
-                💬 Chat acheteur
+                Contacter l’acheteur
               </Button>
             )}
           </div>
+
+          {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
         </CardContent>
       </Card>
 

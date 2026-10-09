@@ -1,15 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../utils/api";
-import { getJwtRole } from "../utils/jwt";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 
 export default function Admin() {
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
-  const role = useMemo(() => getJwtRole(token), [token]);
+  const [currentUser, setCurrentUser] = useState(null);
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,34 +24,46 @@ export default function Admin() {
   const [deleteListingId, setDeleteListingId] = useState("");
 
   useEffect(() => {
-    if (!token) return navigate("/login");
-    if (role !== "ADMIN") return navigate("/");
+    let active = true;
+    api.getCurrentUser()
+      .then((user) => {
+        if (!active) return;
+        if (user.role !== "ADMIN") {
+          navigate("/");
+          return;
+        }
+        setCurrentUser(user);
+      })
+      .catch(() => navigate("/login"));
+    return () => { active = false; };
+  }, [navigate]);
 
-    (async () => {
-      try {
-        const data = await api.adminGetUsers({ query, page, size });
+  useEffect(() => {
+    if (!currentUser) return;
+    let active = true;
+    api.adminGetUsers({ query, page, size })
+      .then((data) => {
+        if (!active) return;
         const content = Array.isArray(data) ? data : data.content;
         setUsers(Array.isArray(content) ? content : []);
         setTotalPages(data?.totalPages ?? 0);
         setTotalElements(data?.totalElements ?? 0);
-      } catch (e) {
-        setError(e?.message || "Erreur admin");
-      } finally {
-        setLoading(false);
-      }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, role, navigate, page]);
+      })
+      .catch((e) => setError(e?.message || "Erreur admin"))
+      .finally(() => active && setLoading(false));
+    return () => { active = false; };
+  }, [currentUser, page]);
 
   // recherche (debounce)
   useEffect(() => {
+    if (!currentUser) return undefined;
     const t = setTimeout(() => {
       setPage(0);
-      refreshUsers({ q: query, p: 0 });
+      refreshUsers({ q: query, p: 0 }).catch((e) => setError(e?.message || "Erreur admin"));
     }, 250);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query]);
+  }, [query, currentUser]);
 
   const refreshUsers = async ({ q = query, p = page } = {}) => {
     const data = await api.adminGetUsers({ query: q, page: p, size });

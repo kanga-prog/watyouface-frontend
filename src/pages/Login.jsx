@@ -1,5 +1,4 @@
 import LoginForm from "../components/LoginForm";
-import { mediaUrl, defaultAvatar } from "../utils/media";
 
 export default function Login() {
   return (

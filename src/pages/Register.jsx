@@ -1,5 +1,4 @@
 import RegisterForm from "../components/RegisterForm";
-import { mediaUrl, defaultAvatar } from "../utils/media";
 
 export default function Register() {
   return (

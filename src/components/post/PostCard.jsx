@@ -7,7 +7,6 @@ import CommentItem from "./CommentItem";
 import CommentForm from "./CommentForm";
 import { api } from "../../utils/api";
 import { mediaUrl, defaultAvatar } from "../../utils/media";
-import { getJwtRole, getJwtUserId } from "../../utils/jwt";
 
 // helper standard
 const avatarSrc = (url) => (url ? mediaUrl(url) : defaultAvatar);
@@ -20,12 +19,12 @@ export default function PostCard({ post, currentUser, onChanged }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(post.content || "");
   const [saving, setSaving] = useState(false);
+  const [actionError, setActionError] = useState("");
 
   const avatarUrl = avatarSrc(post.author?.avatarUrl);
 
-  const token = localStorage.getItem("token");
-  const meId = currentUser?.id ?? getJwtUserId(token);
-  const role = (currentUser?.role ?? getJwtRole(token) ?? "USER").toString();
+  const meId = currentUser?.id;
+  const role = (currentUser?.role ?? "USER").toString();
   const isAdmin = role === "ADMIN";
   const isOwner = meId != null && post.author?.id != null && meId === post.author.id;
 
@@ -60,19 +59,24 @@ export default function PostCard({ post, currentUser, onChanged }) {
 
         {(isOwner || isAdmin) && (
           <div className="ml-auto flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
-              ✏️
+            <Button size="sm" variant="outline" onClick={() => setEditing(true)} aria-label="Modifier cette publication">
+              Modifier
             </Button>
             <Button
               size="sm"
               variant="destructive"
               onClick={async () => {
                 if (!confirm("Supprimer ce post ?")) return;
-                await api.deletePost(post.id);
-                onChanged?.();
+                try {
+                  await api.deletePost(post.id);
+                  onChanged?.();
+                } catch {
+                  setActionError("Impossible de supprimer cette publication.");
+                }
               }}
+              aria-label="Supprimer cette publication"
             >
-              🗑️
+              Supprimer
             </Button>
           </div>
         )}
@@ -107,6 +111,8 @@ export default function PostCard({ post, currentUser, onChanged }) {
                   await api.updatePost(post.id, { content: draft });
                   setEditing(false);
                   onChanged?.();
+                } catch {
+                  setActionError("Impossible d’enregistrer la modification.");
                 } finally {
                   setSaving(false);
                 }
@@ -125,7 +131,7 @@ export default function PostCard({ post, currentUser, onChanged }) {
       {post.imageUrl && (
         <img
           src={mediaUrl(post.imageUrl)}
-          alt="post"
+              alt={`Illustration de la publication de ${post.author?.username || "cet utilisateur"}`}
           className="w-full max-h-[500px] object-cover rounded"
         />
       )}
@@ -148,11 +154,15 @@ export default function PostCard({ post, currentUser, onChanged }) {
           postId={post.id}
           initialLikeCount={post.likeCount}
           initialLiked={post.userHasLiked}
+          disabled={isOwner && !isAdmin}
+          disabledReason={isOwner && !isAdmin ? "Vous ne pouvez pas aimer votre propre publication." : undefined}
         />
-        <Button size="sm" variant="ghost" onClick={() => setShowComments(!showComments)}>
-          💬 {post.commentCount || 0}
+        <Button size="sm" variant="ghost" onClick={() => setShowComments(!showComments)} aria-expanded={showComments}>
+          Commentaires ({post.commentCount || 0})
         </Button>
       </div>
+
+      {actionError && <p role="alert" className="px-4 pb-2 text-sm text-red-700">{actionError}</p>}
 
       {/* COMMENTAIRES */}
       {showComments && (

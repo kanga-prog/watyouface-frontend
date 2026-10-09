@@ -88,9 +88,9 @@ export default function AvatarUpload({ onUpload, currentAvatarUrl }) {
   };
 
   return (
-    <div className="flex flex-col items-center gap-3">
+    <div className="flex min-w-0 flex-col items-center gap-3">
       {/* Avatar grand (profil) */}
-      <div className="w-32 h-32 rounded-full overflow-hidden border bg-gray-100">
+      <div className="h-24 w-24 max-w-full overflow-hidden rounded-full border bg-gray-100 sm:h-32 sm:w-32">
         <img
           src={avatarSrc(preview)}
           alt="avatar"
@@ -102,6 +102,7 @@ export default function AvatarUpload({ onUpload, currentAvatarUrl }) {
       <Button
         size="sm"
         variant="outline"
+        className="w-full max-w-full whitespace-normal sm:w-auto"
         disabled={loading}
         onClick={() => fileInputRef.current?.click()}
       >

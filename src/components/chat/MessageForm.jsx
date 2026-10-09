@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { mediaUrl, defaultAvatar } from "../../utils/media";
 
 export default function MessageForm({ onSend }) {
   const [text, setText] = useState("");
@@ -13,7 +12,9 @@ export default function MessageForm({ onSend }) {
 
   return (
     <form onSubmit={submit} className="flex items-center mt-2">
+      <label className="sr-only" htmlFor="message-content">Message</label>
       <input
+        id="message-content"
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="Écrire un message..."
@@ -21,6 +22,7 @@ export default function MessageForm({ onSend }) {
       />
       <button
         type="submit"
+        disabled={!text.trim()}
         className="bg-blue-500 text-white px-4 py-2 rounded-r-lg hover:bg-blue-600"
       >
         Envoyer

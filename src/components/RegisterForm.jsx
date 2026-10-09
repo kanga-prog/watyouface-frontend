@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
-import { mediaUrl, defaultAvatar } from "../utils/media";
 
 export default function RegisterForm() {
   const [formData, setFormData] = useState({
@@ -11,7 +10,6 @@ export default function RegisterForm() {
     email: "",
     password: "",
   });
-  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -20,8 +18,7 @@ export default function RegisterForm() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    localStorage.setItem("tempUserData", JSON.stringify(formData));
-    navigate("/contract");
+    navigate("/contract", { state: { registration: formData } });
   };
 
   return (
@@ -56,7 +53,6 @@ export default function RegisterForm() {
           Continuer
         </Button>
       </form>
-      {error && <p className="text-red-500 mt-3 text-center">{error}</p>}
     </Card>
   );
 }

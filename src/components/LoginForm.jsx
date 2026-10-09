@@ -4,7 +4,6 @@ import { api } from "../utils/api";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
-import { mediaUrl, defaultAvatar } from "../utils/media";
 
 export default function LoginForm() {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -28,9 +27,9 @@ export default function LoginForm() {
 
       const data = await res.json();
 
-      localStorage.setItem("token", data.token);
       localStorage.setItem("username", data.username);
       localStorage.setItem("avatarUrl", data.avatarUrl ?? "");
+      window.dispatchEvent(new Event("watyouface:auth-change"));
       setMessage("✅ Connexion réussie !");
       navigate("/");
     } catch (err) {

@@ -16,6 +16,9 @@ export default function ChatList({
     <div className="flex flex-col p-2">
 
       {/* Conversations existantes */}
+      {conversations.length === 0 && (
+        <p className="px-2 py-4 text-sm text-gray-500">Aucune conversation pour le moment.</p>
+      )}
       {conversations.map((conv) => {
         const isGroup = conv.group || conv.isGroup;
         const participants = Array.isArray(conv.participants)
@@ -31,10 +34,12 @@ export default function ChatList({
           : otherUser?.username || "Conversation";
 
         return (
-          <div
+          <button
+            type="button"
             key={conv.id}
             onClick={() => onSelect(conv.id)}
-            className={`flex items-center gap-3 p-2 cursor-pointer rounded-lg mb-1 transition ${
+            aria-pressed={selectedConvId === conv.id}
+            className={`flex w-full items-center gap-3 p-2 text-left rounded-lg mb-1 transition focus-visible:z-10 ${
               selectedConvId === conv.id
                 ? "bg-blue-100"
                 : "hover:bg-gray-100"
@@ -57,7 +62,7 @@ export default function ChatList({
                 {conv.lastMessage || "Aucun message"}
               </p>
             </div>
-          </div>
+          </button>
         );
       })}
 
@@ -70,17 +75,18 @@ export default function ChatList({
           </p>
 
           {users.map((user) => (
-            <div
+            <button
+              type="button"
               key={user.id}
               onClick={() => onAvatarClick(user.id)}
-              className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-gray-100 mb-1"
+              className="flex w-full items-center gap-3 p-2 rounded-lg text-left hover:bg-gray-100 mb-1"
             >
               <Avatar size="chat" className="shrink-0">
                 <AvatarImage src={avatarSrc(user.avatarUrl)} />
                 <AvatarFallback>👤</AvatarFallback>
               </Avatar>
               <p className="font-medium text-sm truncate">{user.username}</p>
-            </div>
+            </button>
           ))}
         </>
       )}

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { api } from "../utils/api";
-import { mediaUrl, defaultAvatar } from "../utils/media";
 
 export default function Contract() {
   const [contract, setContract] = useState(null);
@@ -9,6 +8,7 @@ export default function Contract() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const fetchContract = async () => {
@@ -28,8 +28,8 @@ export default function Contract() {
   }, []);
 
   const handleAccept = async () => {
-    const tempData = localStorage.getItem("tempUserData");
-    if (!tempData || !contract) {
+    const registration = location.state?.registration;
+    if (!registration || !contract) {
       navigate("/register");
       return;
     }
@@ -39,7 +39,7 @@ export default function Contract() {
 
     try {
       const res = await api.register({
-        ...JSON.parse(tempData),
+        ...registration,
         acceptTerms: true,
       });
 
@@ -48,7 +48,6 @@ export default function Contract() {
         throw new Error(text);
       }
 
-      localStorage.removeItem("tempUserData");
       navigate("/login", {
         state: { message: "✅ Compte créé avec succès !" },
       });
@@ -60,7 +59,6 @@ export default function Contract() {
   };
 
   const handleReject = () => {
-    localStorage.removeItem("tempUserData");
     navigate("/register");
   };
 
