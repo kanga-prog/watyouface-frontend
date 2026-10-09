@@ -5,6 +5,38 @@ const API_BASE =
   import.meta.env.VITE_API_BASE ||
   "http://localhost:8080";
 
+const nativeFetch = globalThis.fetch.bind(globalThis);
+let csrfTokenPromise;
+
+async function getCsrfToken() {
+  if (!csrfTokenPromise) {
+    csrfTokenPromise = nativeFetch(`${API_BASE}/api/auth/csrf`, { credentials: "include" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Impossible d'initialiser la protection CSRF");
+        const payload = await response.json();
+        if (!payload?.token) throw new Error("Jeton CSRF absent");
+        return payload.token;
+      })
+      .catch((error) => {
+        csrfTokenPromise = undefined;
+        throw error;
+      });
+  }
+  return csrfTokenPromise;
+}
+
+async function apiFetch(url, options = {}) {
+  const method = (options.method || "GET").toUpperCase();
+  const headers = new Headers(options.headers || {});
+  if (!["GET", "HEAD", "OPTIONS", "TRACE"].includes(method)) {
+    headers.set("X-XSRF-TOKEN", await getCsrfToken());
+  }
+  return nativeFetch(url, { ...options, method, headers, credentials: "include" });
+}
+
+// All application API requests use cookies and the CSRF header centrally.
+const fetch = apiFetch;
+
 // 🧪 Aide debug en dev
 if (import.meta.env.DEV) {
   console.log("🌍 API_BASE =", API_BASE);
@@ -26,18 +58,9 @@ async function parseError(res) {
 
 
 export const api = {
-  // 🔐 TOKEN
-  getToken: () => localStorage.getItem("token"),
-
-  authHeader: () => {
-    const t = api.getToken();
-    return t ? { Authorization: `Bearer ${t}` } : {};
-  },
-
-  jsonHeaders: () => ({
-    ...api.authHeader(),
-    "Content-Type": "application/json",
-  }),
+  // Compatibility for existing call sites; authentication is cookie-based, never a JS token header.
+  authHeader: () => ({}),
+  jsonHeaders: () => ({ "Content-Type": "application/json" }),
 
   // =========================
   // 🔐 AUTH
@@ -48,6 +71,15 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(credentials),
     }),
+
+  logout: () =>
+    fetch(`${API_BASE}/api/auth/logout`, { method: "POST" }),
+
+  getCurrentUser: async () => {
+    const res = await fetch(`${API_BASE}/api/users/me`);
+    if (!res.ok) throw new Error(`Session indisponible (${res.status})`);
+    return res.json();
+  },
 
   register: (data) =>
     fetch(`${API_BASE}/api/auth/register`, {
