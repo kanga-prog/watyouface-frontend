@@ -1,0 +1,7 @@
+NPM runtime dependency audit — 2026-10-08
+Commands: npm install; targeted runtime updates; npm audit fix (without --force); npm audit; npm audit --omit=dev.
+Final result: both full dependency graph and runtime-only graph report `found 0 vulnerabilities`.
+Runtime severity counts: critical 0, high 0, moderate 0, low 0.
+Initial runtime fixes: react-router-dom/react-router 7.9.5 -> 7.18.4; websocket-driver 0.7.4 -> 0.7.5 (transitive via sockjs-client 1.6.1 / faye-websocket 0.11.4).
+The development-inclusive audit initially reported 14 issues (1 low, 3 moderate, 10 high). The standard `npm audit fix --dry-run` proposed semver-compatible updates, including Vite 7.2.2 -> 7.3.7 and compatible PostCSS/transitive fixes. `npm audit fix` applied those updates: 38 packages changed, one added, one removed. No `--force` was used and no major-version change was proposed/applied. package-lock.json records resolved versions.
+Final validation after updates: lint PASS; Vitest 6 files / 14 tests PASS; production build PASS (Vite 7.3.7).
