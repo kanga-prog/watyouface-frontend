@@ -27,6 +27,7 @@ export default function Profile() {
   const navigate = useNavigate();
 
   const avatarSrc = (url) => (url ? mediaUrl(url) : defaultAvatar);
+  const isAdmin = (user?.role ?? "USER").toString().toUpperCase().replace(/^ROLE_/, "") === "ADMIN";
 
   /* ===== LOAD PROFILE ===== */
   useEffect(() => {
@@ -93,9 +94,8 @@ export default function Profile() {
       // reload user to update wallet balance (walletBalance renvoyé par /users/me)
       const updatedUser = await api.getProfile();
       setUser(updatedUser);
-    } catch (err) {
-      console.error(err);
-      alert("Erreur lors du rechargement du wallet.");
+    } catch {
+      alert("Erreur lors du crédit du wallet de démonstration.");
     } finally {
       setRecharging(false);
     }
@@ -104,60 +104,70 @@ export default function Profile() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-3xl mx-auto space-y-6">
+    <div className="min-h-screen w-full bg-gray-50 px-4 py-8">
+      <div className="mx-auto w-full min-w-0 max-w-3xl space-y-6">
 
         {/* ===== HEADER PROFIL ===== */}
-        <section className="bg-white p-6 rounded shadow flex gap-6 items-center">
-          <Avatar className="w-24 h-24 ring-4 ring-blue-500/20">
-            <AvatarImage src={avatarSrc(user.avatarUrl)} />
-            <AvatarFallback>
-              {user.username?.[0]?.toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+        <section className="flex min-w-0 flex-col items-stretch gap-4 rounded bg-white p-4 shadow sm:flex-row sm:items-center sm:gap-6 sm:p-6">
+          <div className="flex min-w-0 items-center gap-4">
+            <Avatar className="h-20 w-20 shrink-0 ring-4 ring-blue-500/20 sm:h-24 sm:w-24">
+              <AvatarImage src={avatarSrc(user.avatarUrl)} />
+              <AvatarFallback>
+                {user.username?.[0]?.toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
 
-          <div className="flex-1 space-y-1">
-            <h2 className="text-2xl font-bold">{user.username}</h2>
-            <p className="text-sm text-gray-500">{user.email}</p>
+            <div className="min-w-0 flex-1 space-y-1">
+              <h2 className="break-words text-2xl font-bold">{user.username}</h2>
+              <p className="break-all text-sm text-gray-500">{user.email} <span className="sr-only">(donnée privée)</span></p>
+            </div>
           </div>
 
-          <AvatarUpload
-            currentAvatarUrl={user.avatarUrl}
-            onUpload={handleAvatarUpload}
-          />
+          <div className="w-full min-w-0 sm:w-auto sm:shrink-0">
+            <AvatarUpload
+              currentAvatarUrl={user.avatarUrl}
+              onUpload={handleAvatarUpload}
+            />
+          </div>
         </section>
 
         {/* ===== WALLET ===== */}
-        <section className="bg-white p-6 rounded shadow space-y-3">
-          <h2 className="text-xl font-semibold">💰 Wallet</h2>
+        <section className="min-w-0 space-y-3 rounded bg-white p-4 shadow sm:p-6">
+          <h2 className="text-xl font-semibold">Wallet de démonstration</h2>
           <p>
-            Solde : <span className="font-bold">{user.walletBalance ?? 0} WUF</span>
+            Solde : <span className="font-bold">{user.walletBalance ?? 0} crédits démo</span>
           </p>
 
-          <div className="flex gap-2 mt-2">
-            <input
-              type="number"
-              placeholder="Montant à recharger"
-              className="border p-2 rounded flex-1"
-              value={walletAmount}
-              onChange={(e) => setWalletAmount(e.target.value)}
-            />
-            <Button onClick={handleRecharge} disabled={recharging}>
-              {recharging ? "Rechargement..." : "Recharger"}
-            </Button>
-          </div>
+          {isAdmin ? (
+            <div className="mt-2 flex min-w-0 flex-col gap-2 sm:flex-row">
+              <label className="sr-only" htmlFor="wallet-credit">Montant de crédit démo</label>
+              <input
+                id="wallet-credit"
+                type="number"
+                placeholder="Montant à créditer"
+                className="min-w-0 flex-1 rounded border p-2"
+                value={walletAmount}
+                onChange={(e) => setWalletAmount(e.target.value)}
+              />
+              <Button onClick={handleRecharge} disabled={recharging}>
+                {recharging ? "Crédit en cours…" : "Créditer (admin)"}
+              </Button>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-600">Le crédit de démonstration est réservé à l’administration.</p>
+          )}
         </section>
 
         {/* ===== IDENTITÉ ===== */}
-        <section className="bg-white p-6 rounded shadow space-y-4">
+        <section className="min-w-0 space-y-4 rounded bg-white p-4 shadow sm:p-6">
           <h2 className="text-xl font-semibold">👤 Identité</h2>
 
           {editingUsername ? (
-            <div className="flex gap-2">
+            <div className="flex min-w-0 flex-col gap-2 sm:flex-row">
               <input
                 value={newUsername}
                 onChange={(e) => setNewUsername(e.target.value)}
-                className="border px-2 py-1 rounded"
+                className="min-w-0 rounded border px-2 py-1"
               />
               <Button size="sm" onClick={handleUsernameUpdate} disabled={saving}>
                 💾
@@ -178,7 +188,7 @@ export default function Profile() {
         </section>
 
         {/* ===== DOCUMENTS ===== */}
-        <section className="bg-white p-6 rounded shadow space-y-3">
+        <section className="min-w-0 space-y-3 rounded bg-white p-4 shadow sm:p-6">
           <h2 className="text-xl font-semibold">📄 Documents</h2>
 
           {loadingContract ? (

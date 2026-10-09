@@ -1,0 +1,12 @@
+RNCP6 Phase 11B — aperçu sans écriture
+Commandes: npm audit fix --dry-run ; npm audit fix --omit=dev --dry-run
+Date: 08/10/2026
+Résultat:
+- Mode complet propose une actualisation large du graphe, dont Vite 7.2.2 -> 7.3.7 et React Router 7.9.5 -> 7.18.4; aucune major React Router/Vite proposée, mais 42 paquets changés en dry-run complet.
+- Mode omit=dev cible le graphe runtime et indique websocket-driver 0.7.4 -> 0.7.5 et React Router 7.9.5 -> 7.18.4; la simulation prune aussi les dépendances de développement. Aucun dry-run n'a écrit les fichiers.
+Décision: appliquer des mises à jour runtime ciblées et revérifier le lockfile; ne pas employer --force ni la simulation omit=dev comme commande d'installation.
+
+Réévaluation après correctifs runtime:
+- `npm audit --json` complet révélait ensuite 14 alertes de toolchain/dépendances de développement (1 low, 3 moderate, 10 high), chacune avec correctif disponible.
+- Second `npm audit fix --dry-run`: 38 changements compatibles semver, Vite 7.2.2 -> 7.3.7, PostCSS et transitives corrigés; aucun saut de major demandé. Ce dry-run est resté non mutatif.
+- À la suite de cette revue, `npm audit fix` standard (sans `--force`) a été autorisé; audits complet et runtime finaux retournent 0 vulnérabilité.

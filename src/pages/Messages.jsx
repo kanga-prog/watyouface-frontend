@@ -1,76 +1,113 @@
-import { useEffect, useState, useRef } from "react";
-import { connect, subscribe, sendMessage } from "@/utils/chatApi";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { mediaUrl, defaultAvatar } from "../utils/media";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import ChatList from "../components/chat/ChatList";
+import ChatWindow from "../components/chat/ChatWindow";
+import { api } from "../utils/api";
 
-export default function Messages({ conversationId, jwtToken }) {
-  const [messages, setMessages] = useState([]);
-  const [content, setContent] = useState("");
-  const messagesEndRef = useRef(null);
+export default function Messages() {
+  const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState(null);
+  const [conversations, setConversations] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [selectedConvId, setSelectedConvId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Scroll auto vers le bas
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const loadChat = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [profile, loadedConversations, loadedUsers] = await Promise.all([
+        api.getProfile(),
+        api.getConversations(),
+        api.getUsers(),
+      ]);
+      setCurrentUser(profile);
+      setConversations(Array.isArray(loadedConversations) ? loadedConversations : []);
+      setUsers(Array.isArray(loadedUsers) ? loadedUsers : []);
+    } catch (loadError) {
+      if (/\(401\)/.test(loadError.message)) {
+        navigate("/login");
+        return;
+      }
+      setError("La messagerie est indisponible. Réessayez dans un instant.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(scrollToBottom, [messages]);
-
-  // Connexion + abonnement au WebSocket
   useEffect(() => {
-    if (!jwtToken || !conversationId) return;
+    loadChat();
+    // Initial load only; manual retry is explicit to avoid unnecessary polling.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    // 1️⃣ Connexion STOMP (async)
-    connect(jwtToken, (client) => {
-      console.log("🔥 CONNECTED, subscribing to conversation", conversationId);
-
-      // 2️⃣ Une fois connecté → on s'abonne
-      subscribe(conversationId, (msg) => {
-        setMessages((prev) => [...prev, msg]);
-      });
-    });
-  }, [jwtToken, conversationId]);
-
-  // Envoi de message
-  const handleSend = () => {
-    if (!content.trim()) return;
-    sendMessage(conversationId, content);
-    setContent("");
+  const getOrCreateConversation = async (userId) => {
+    setError(null);
+    try {
+      const conversation = await api.getOrCreateConversation(userId);
+      setConversations((previous) => (
+        previous.some((item) => item.id === conversation.id)
+          ? previous
+          : [conversation, ...previous]
+      ));
+      setSelectedConvId(conversation.id);
+    } catch {
+      setError("Impossible d’ouvrir cette conversation.");
+    }
   };
+
+  const hasSelection = selectedConvId !== null;
 
   return (
-    <Card className="w-full max-w-2xl mx-auto rounded-2xl shadow-lg border">
-      <CardContent className="p-6 space-y-4">
-
-        {/* Messages list */}
-        <div className="h-96 overflow-y-auto p-4 bg-muted rounded-xl space-y-3">
-          {messages.map((msg, idx) => (
-            <div
-              key={idx}
-              className="p-3 rounded-xl bg-white shadow text-sm"
-            >
-              <strong>{msg.senderName || "Utilisateur"}</strong><br />
-              {msg.content}
-            </div>
-          ))}
-
-          <div ref={messagesEndRef}></div>
+    <main className="min-h-[calc(100vh-4rem)] bg-[var(--color-background)] p-3 sm:p-5">
+      <header className="mx-auto mb-3 flex max-w-6xl items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Messagerie</h1>
+          <p className="text-sm text-[var(--color-text-secondary)]">Échangez avec les membres de la communauté.</p>
         </div>
+        <button type="button" onClick={loadChat} className="rounded-md border px-3 py-2 text-sm font-medium hover:bg-white" disabled={loading}>
+          Actualiser
+        </button>
+      </header>
 
-        {/* Input + bouton */}
-        <div className="flex gap-2 mt-4">
-          <Input
-            placeholder="Écrire un message..."
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            className="flex-1"
-          />
-          <Button onClick={handleSend} className="rounded-xl px-6">
-            Envoyer
-          </Button>
+      {error && (
+        <div role="alert" className="mx-auto mb-3 max-w-6xl rounded-lg border border-red-200 bg-red-50 p-3 text-red-800">
+          {error}
         </div>
-      </CardContent>
-    </Card>
+      )}
+
+      {loading ? (
+        <p role="status" className="mx-auto max-w-6xl rounded-lg bg-white p-6 text-center text-[var(--color-text-secondary)]">Chargement des conversations…</p>
+      ) : (
+        <div className="mx-auto grid min-h-[calc(100vh-11rem)] max-w-6xl overflow-hidden rounded-xl border bg-white shadow-sm md:grid-cols-[20rem_minmax(0,1fr)]">
+          <aside className={hasSelection ? "hidden border-r md:block" : "border-r"} aria-label="Liste des conversations">
+            <ChatList
+              conversations={conversations}
+              users={users.filter((user) => user.id !== currentUser?.id)}
+              selectedConvId={selectedConvId}
+              onSelect={setSelectedConvId}
+              onAvatarClick={getOrCreateConversation}
+              currentUserId={currentUser?.id}
+            />
+          </aside>
+
+          <section className={hasSelection ? "flex min-h-0 flex-col" : "hidden min-h-0 flex-col md:flex"} aria-label="Conversation active">
+            {hasSelection ? (
+              <>
+                <button type="button" className="border-b px-4 py-3 text-left text-sm font-medium md:hidden" onClick={() => setSelectedConvId(null)}>
+                  ← Retour aux conversations
+                </button>
+                <ChatWindow convId={selectedConvId} username={currentUser?.username} />
+              </>
+            ) : (
+              <div className="flex flex-1 items-center justify-center p-6 text-center text-[var(--color-text-secondary)]">
+                Sélectionnez une conversation pour afficher son historique.
+              </div>
+            )}
+          </section>
+        </div>
+      )}
+    </main>
   );
 }

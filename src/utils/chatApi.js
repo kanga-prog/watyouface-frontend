@@ -8,9 +8,9 @@ let client = null;
 const subscriptions = {};
 
 /**
- * Connexion STOMP via SockJS + JWT
+ * Connexion STOMP via SockJS; the HTTP handshake carries the HttpOnly auth cookie.
  */
-export function connect(jwtToken, onConnect) {
+export function connect(onConnect) {
   if (client && client.active) {
     console.log("⚡ Déjà connecté au WS");
     onConnect?.(client);
@@ -20,7 +20,7 @@ export function connect(jwtToken, onConnect) {
   client = new Client({
     brokerURL: undefined, // SockJS obligatoire
     webSocketFactory: () => new SockJS(WS_URL),
-    connectHeaders: { Authorization: `Bearer ${jwtToken}` },
+    connectHeaders: {},
     reconnectDelay: 5000,
     debug: (str) => console.log("📡 STOMP:", str),
     onConnect: () => {

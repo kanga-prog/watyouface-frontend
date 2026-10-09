@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { api } from "../../utils/api";
 import ListingCard from "./ListingCard";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
@@ -21,6 +21,7 @@ export default function MarketplaceSidebar({ currentUser, refreshUser, onOpenCha
   });
 
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
 
   const [toast, setToast] = useState(null); // { type: "success"|"error", msg }
   const toastOk = (msg) => {
@@ -32,36 +33,23 @@ export default function MarketplaceSidebar({ currentUser, refreshUser, onOpenCha
     setTimeout(() => setToast(null), 3500);
   };
 
-  const mountedRef = useRef(true);
-
-  const loadListings = async ({ silent = false } = {}) => {
-    if (!silent) setLoading(true);
+  const loadListings = async () => {
+    setLoading(true);
+    setLoadError(null);
     try {
       const data = await api.getListings();
-      if (mountedRef.current) setListings(Array.isArray(data) ? data : []);
-    } catch (e) {
-      if (!silent) toastErr(e?.message || "Impossible de charger les annonces");
+      setListings(Array.isArray(data) ? data : []);
+    } catch {
+      setListings([]);
+      setLoadError("Impossible de charger les annonces. Réessayez dans un instant.");
     } finally {
-      if (!silent && mountedRef.current) setLoading(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    mountedRef.current = true;
-
-    // initial load
     loadListings();
-
-    // ✅ auto-refresh (polling)
-    const id = setInterval(() => {
-      loadListings({ silent: true });
-    }, 10_000);
-
-    return () => {
-      mountedRef.current = false;
-      clearInterval(id);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Initial load only: data is refreshed explicitly after an action or on demand.
   }, []);
 
   const filteredListings = useMemo(() => {
@@ -116,7 +104,7 @@ export default function MarketplaceSidebar({ currentUser, refreshUser, onOpenCha
   };
 
   return (
-    <Card className="w-80 p-4 space-y-4 h-full flex flex-col">
+    <Card className="w-full p-4 space-y-4 flex flex-col">
       {toast && (
         <div
           className={`fixed bottom-4 right-4 z-50 px-4 py-2 rounded-xl shadow-lg border text-sm ${
@@ -129,11 +117,14 @@ export default function MarketplaceSidebar({ currentUser, refreshUser, onOpenCha
         </div>
       )}
 
-      <CardHeader>
-        <CardTitle>🛒 Marketplace</CardTitle>
+      <CardHeader className="flex-row items-center justify-between gap-3">
+        <CardTitle>Marketplace</CardTitle>
+        <Button type="button" variant="outline" size="sm" onClick={loadListings} disabled={loading}>
+          Actualiser
+        </Button>
       </CardHeader>
 
-      <CardContent className="space-y-3 flex-1 overflow-y-auto">
+      <CardContent className="space-y-3 flex-1">
         <Button
           className="w-full"
           onClick={() => setOpenCreate(true)}
@@ -143,22 +134,25 @@ export default function MarketplaceSidebar({ currentUser, refreshUser, onOpenCha
         </Button>
 
         {/* FILTRES */}
-        <div className="space-y-2 mb-4">
+        <div className="grid gap-2 mb-4 md:grid-cols-[minmax(0,1fr)_auto]">
           <Input
+            aria-label="Rechercher une annonce"
             placeholder="Rechercher (titre / description)"
             value={filters.query}
             onChange={(e) => setFilters({ ...filters, query: e.target.value })}
           />
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 md:col-span-2">
             <Input
               type="number"
+              aria-label="Prix minimum"
               placeholder="Prix min"
               value={filters.minPrice}
               onChange={(e) => setFilters({ ...filters, minPrice: e.target.value })}
             />
             <Input
               type="number"
+              aria-label="Prix maximum"
               placeholder="Prix max"
               value={filters.maxPrice}
               onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })}
@@ -181,18 +175,22 @@ export default function MarketplaceSidebar({ currentUser, refreshUser, onOpenCha
 
         {/* LISTINGS */}
         {loading ? (
-          <p className="text-center text-gray-500">Chargement...</p>
+          <p role="status" className="text-center text-gray-500">Chargement des annonces…</p>
+        ) : loadError ? (
+          <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+            {loadError}
+          </div>
         ) : filteredListings.length === 0 ? (
-          <p className="text-center text-gray-400">Aucune annonce</p>
+          <p className="rounded-lg bg-gray-50 p-6 text-center text-gray-500">Aucune annonce disponible.</p>
         ) : (
-          filteredListings.map((l) => (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{filteredListings.map((l) => (
             <ListingCard
               key={l.id}
               listing={l}
               currentUser={currentUser}
               onAction={handleCardAction}
             />
-          ))
+          ))}</div>
         )}
       </CardContent>
 

@@ -1,0 +1,15 @@
+RNCP6 Phase 11B — npm audit avant correction
+Date: 08/10/2026
+Commande: npm audit --omit=dev --json
+Source: advisory database npm interrogée hors sandbox après échec DNS EAI_AGAIN dans le sandbox.
+
+Résumé production:
+- 3 packages vulnérables: 2 HIGH, 1 CRITICAL; aucun MODERATE/LOW comptabilisé comme package vulnérable dans le résumé runtime.
+- react-router-dom 7.9.5 (direct, package.json ^7.9.4) -> react-router 7.9.5 (transitif): advisory range npm 6.0.0–7.17.0, sévérité HIGH. Fix proposé par registry/dry-run: react-router-dom/react-router 7.18.4, même major (pas de rupture majeure annoncée).
+  Advisories associés observés: GHSA-2w69-qvjg-hvjx (XSS via open redirects, HIGH); GHSA-9jcx-v3wj-wh4m (redirect externe, MODERATE); GHSA-49rj-9fvp-4h2h (désérialisation / constructor invocation, HIGH); GHSA-8646-j5j9-6r62 (XSS RSC redirect, HIGH); GHSA-8x6r-g9mw-2r78 (DoS path expansion, HIGH); GHSA-rxv8-25v2-qmq8 (DoS single-fetch, HIGH); GHSA-h5cw-625j-3rxh (CSRF actions, MODERATE); GHSA-wrjc-x8rr-h8h6 (open redirect backslash, MODERATE); GHSA-337j-9hxr-rhxg (constructor injection SSR hydration, MODERATE); GHSA-chx6-hx7r-mcp5 (DoS route matching, HIGH); GHSA-2j2x-hqr9-3h42 (open redirect protocol-relative, MODERATE); GHSA-f22v-gfqf-p8f3 (XSS redirect HTML, MODERATE); GHSA-8v8x-cx79-35w7 (SSR XSS, HIGH).
+  Chemin: react-router-dom -> react-router.
+- websocket-driver 0.7.4 (transitif): sockjs-client 1.6.1 -> faye-websocket 0.11.4 -> websocket-driver. Advisory range <=0.7.4, CRITICAL. GHSA-mp7j-qc5w-4988 (resource-limit bypass via compression) et GHSA-xv26-6w52-cph6 (message corruption via protocol length headers). Fix proposé: 0.7.5, patch version.
+- react-router-dom est listé par npm comme dépendance directe affectée par react-router; la faille est portée par la dépendance transitivement vulnérable.
+- Breaking change: aucun saut de major dans les versions fix proposées (7.9.5 -> 7.18.4 et 0.7.4 -> 0.7.5); compatibilité fonctionnelle à valider par lint/tests/build.
+- npm audit fix --dry-run complet prévisualisait aussi des mises à jour hors périmètre runtime. npm audit fix --omit=dev --dry-run prévisualisait notamment react-router 7.18.4 et websocket-driver 0.7.5, mais supprimait aussi les dépendances dev du résultat simulé; cette commande ne sera pas appliquée telle quelle.
+- Résultat avant: 2 HIGH + 1 CRITICAL runtime. Aucune valeur sensible dans cette preuve.
