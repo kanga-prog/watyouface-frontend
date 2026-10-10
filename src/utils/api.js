@@ -61,6 +61,7 @@ export const api = {
   // Compatibility for existing call sites; authentication is cookie-based, never a JS token header.
   authHeader: () => ({}),
   jsonHeaders: () => ({ "Content-Type": "application/json" }),
+  errorMessage: parseError,
 
   // =========================
   // 🔐 AUTH
