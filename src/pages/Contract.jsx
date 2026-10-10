@@ -44,8 +44,7 @@ export default function Contract() {
       });
 
       if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text);
+        throw new Error(await api.errorMessage(res));
       }
 
       navigate("/login", {
