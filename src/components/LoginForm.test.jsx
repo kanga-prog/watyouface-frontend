@@ -1,13 +1,20 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import LoginForm from './LoginForm';
 import { api } from '../utils/api';
 
-vi.mock('../utils/api', () => ({ api: { login: vi.fn() } }));
+vi.mock('../utils/api', () => ({ api: { login: vi.fn(), errorMessage: vi.fn() } }));
 
 function renderForm() {
-  return render(<BrowserRouter><LoginForm /></BrowserRouter>);
+  return render(
+    <MemoryRouter initialEntries={["/login"]}>
+      <Routes>
+        <Route path="/login" element={<LoginForm />} />
+        <Route path="/" element={<p>Authenticated landing</p>} />
+      </Routes>
+    </MemoryRouter>,
+  );
 }
 
 describe('LoginForm', () => {
@@ -24,12 +31,14 @@ describe('LoginForm', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Se connecter' }));
 
     await waitFor(() => expect(api.login).toHaveBeenCalledWith({ email: 'alice@example.test', password: 'SecurePassword123!' }));
+    expect(await screen.findByText("Authenticated landing")).toBeInTheDocument();
     expect(localStorage.getItem('token')).toBeNull();
     expect(localStorage.getItem('username')).toBe('alice');
   });
 
   it('displays an API error without storing a token', async () => {
-    api.login.mockResolvedValue({ ok: false, text: async () => 'Identifiants invalides' });
+    api.login.mockResolvedValue({ ok: false });
+    api.errorMessage.mockResolvedValue('Identifiants invalides');
     renderForm();
     fireEvent.change(screen.getByPlaceholderText('Adresse e-mail'), { target: { value: 'alice@example.test' } });
     fireEvent.change(screen.getByPlaceholderText('Mot de passe'), { target: { value: 'WrongPassword123!' } });

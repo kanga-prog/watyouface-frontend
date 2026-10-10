@@ -21,8 +21,7 @@ export default function LoginForm() {
       const res = await api.login(formData);
 
       if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text);
+        throw new Error(await api.errorMessage(res));
       }
 
       const data = await res.json();
@@ -63,7 +62,7 @@ export default function LoginForm() {
         </Button>
       </form>
 
-      {message && <p className="mt-3 text-center text-sm">{message}</p>}
+      {message && <p className="mt-3 text-center text-sm" role="status" aria-live="polite">{message}</p>}
 
       <p className="mt-4 text-center text-sm">
         Pas encore de compte ?{" "}
