@@ -60,6 +60,28 @@ describe("cookie-auth API transport", () => {
     expect(uploadCall[1].body).toBeInstanceOf(FormData);
   });
 
+  it("fetches a fresh CSRF token for each serialized state-changing request", async () => {
+    let csrfRequests = 0;
+    const request = vi.fn(async (url) => {
+      if (url.endsWith("/api/auth/csrf")) {
+        csrfRequests += 1;
+        return { ok: true, json: async () => ({ token: `csrf-${csrfRequests}` }) };
+      }
+      return { ok: true, json: async () => ({}) };
+    });
+    vi.stubGlobal("fetch", request);
+    const { api } = await import("./api");
+
+    await api.requestPurchase(17);
+    await api.acceptListing(17);
+
+    const csrfCalls = request.mock.calls.filter(([url]) => url.endsWith("/api/auth/csrf"));
+    const mutations = request.mock.calls.filter(([url]) => !url.endsWith("/api/auth/csrf"));
+    expect(csrfCalls).toHaveLength(2);
+    expect(mutations[0][1].headers.get("X-XSRF-TOKEN")).toBe("csrf-1");
+    expect(mutations[1][1].headers.get("X-XSRF-TOKEN")).toBe("csrf-2");
+  });
+
   it("sends credentials on protected reads so the browser can attach its HttpOnly cookie", async () => {
     const request = vi.fn(async () => ({ ok: true, json: async () => [] }));
     vi.stubGlobal("fetch", request);

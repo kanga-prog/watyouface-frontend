@@ -6,30 +6,30 @@ const API_BASE =
   "http://localhost:8080";
 
 const nativeFetch = globalThis.fetch.bind(globalThis);
-let csrfTokenPromise;
+let stateChangingRequest = Promise.resolve();
 
 async function getCsrfToken() {
-  if (!csrfTokenPromise) {
-    csrfTokenPromise = nativeFetch(`${API_BASE}/api/auth/csrf`, { credentials: "include" })
-      .then(async (response) => {
-        if (!response.ok) throw new Error("Impossible d'initialiser la protection CSRF");
-        const payload = await response.json();
-        if (!payload?.token) throw new Error("Jeton CSRF absent");
-        return payload.token;
-      })
-      .catch((error) => {
-        csrfTokenPromise = undefined;
-        throw error;
-      });
-  }
-  return csrfTokenPromise;
+  const response = await nativeFetch(`${API_BASE}/api/auth/csrf`, { credentials: "include" });
+  if (!response.ok) throw new Error("Impossible d'initialiser la protection CSRF");
+  const payload = await response.json();
+  if (!payload?.token) throw new Error("Jeton CSRF absent");
+  return payload.token;
 }
 
 async function apiFetch(url, options = {}) {
   const method = (options.method || "GET").toUpperCase();
   const headers = new Headers(options.headers || {});
   if (!["GET", "HEAD", "OPTIONS", "TRACE"].includes(method)) {
-    headers.set("X-XSRF-TOKEN", await getCsrfToken());
+    // Spring rotates the CSRF cookie after a successful state-changing request.
+    // Serialize mutations and fetch the current token for each one, so a stale
+    // cached token cannot turn the next authenticated request into a 401/403.
+    const send = async () => {
+      headers.set("X-XSRF-TOKEN", await getCsrfToken());
+      return nativeFetch(url, { ...options, method, headers, credentials: "include" });
+    };
+    const request = stateChangingRequest.then(send, send);
+    stateChangingRequest = request.then(() => undefined, () => undefined);
+    return request;
   }
   return nativeFetch(url, { ...options, method, headers, credentials: "include" });
 }
