@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import ChatList from "../components/chat/ChatList";
 import ChatWindow from "../components/chat/ChatWindow";
 import { api } from "../utils/api";
 
 export default function Messages() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentUser, setCurrentUser] = useState(null);
   const [conversations, setConversations] = useState([]);
   const [users, setUsers] = useState([]);
-  const [selectedConvId, setSelectedConvId] = useState(null);
+  const [selectedConvId, setSelectedConvId] = useState(location.state?.conversationId ?? null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -41,6 +42,12 @@ export default function Messages() {
     // Initial load only; manual retry is explicit to avoid unnecessary polling.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (location.state?.conversationId != null) {
+      setSelectedConvId(location.state.conversationId);
+    }
+  }, [location.state?.conversationId]);
 
   const getOrCreateConversation = async (userId) => {
     setError(null);
