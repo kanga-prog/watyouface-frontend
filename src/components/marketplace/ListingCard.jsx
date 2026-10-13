@@ -42,8 +42,8 @@ export default function ListingCard({ listing, currentUser, onAction }) {
 
       const conv = await api.getOrCreateConversation(otherUserId);
       onAction?.({ type: "chat", conversationId: conv.id, listing });
-    } catch {
-      setError("Impossible d’ouvrir la conversation. Réessayez plus tard.");
+    } catch (error) {
+      setError(error?.message || "Impossible d’ouvrir la conversation. Réessayez plus tard.");
     } finally {
       setLoading(false);
     }
@@ -55,8 +55,8 @@ export default function ListingCard({ listing, currentUser, onAction }) {
     try {
       await fn();
       onAction?.({ type: "update", listingId: listing.id, status: nextStatus });
-    } catch {
-      setError("Cette action marketplace n’a pas pu être réalisée.");
+    } catch (error) {
+      setError(error?.message || "Cette action marketplace n’a pas pu être réalisée.");
     } finally {
       setLoading(false);
     }

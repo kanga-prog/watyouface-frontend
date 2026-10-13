@@ -25,6 +25,63 @@ describe("cookie-auth API transport", () => {
     expect(api.authHeader()).toEqual({});
   });
 
+  it("sends authenticated marketplace purchase requests with cookie credentials and CSRF", async () => {
+    const request = vi.fn(async (url) => url.endsWith("/api/auth/csrf")
+      ? { ok: true, json: async () => ({ token: "csrf-market-test" }) }
+      : { ok: true, json: async () => ({ message: "Demande envoyée" }) });
+    vi.stubGlobal("fetch", request);
+    const { api } = await import("./api");
+
+    await api.requestPurchase(17);
+
+    const purchaseCall = request.mock.calls[1];
+    expect(purchaseCall[0]).toContain("/api/marketplace/listings/17/request");
+    expect(purchaseCall[1].method).toBe("POST");
+    expect(purchaseCall[1].credentials).toBe("include");
+    expect(purchaseCall[1].headers.get("X-XSRF-TOKEN")).toBe("csrf-market-test");
+    expect(purchaseCall[1].headers.has("Authorization")).toBe(false);
+  });
+
+  it("uploads a listing image using multipart data without overriding the browser boundary", async () => {
+    const request = vi.fn(async (url) => url.endsWith("/api/auth/csrf")
+      ? { ok: true, json: async () => ({ token: "csrf-upload-test" }) }
+      : { ok: true, json: async () => ({ imageUrl: "/media/marketplace/item.jpg" }) });
+    vi.stubGlobal("fetch", request);
+    const { api } = await import("./api");
+    const file = new File(["image"], "item.png", { type: "image/png" });
+
+    await api.uploadMarketplaceImage(file);
+
+    const uploadCall = request.mock.calls[1];
+    expect(uploadCall[0]).toContain("/api/marketplace/listings/upload");
+    expect(uploadCall[1].credentials).toBe("include");
+    expect(uploadCall[1].headers.get("X-XSRF-TOKEN")).toBe("csrf-upload-test");
+    expect(uploadCall[1].headers.has("Content-Type")).toBe(false);
+    expect(uploadCall[1].body).toBeInstanceOf(FormData);
+  });
+
+  it("fetches a fresh CSRF token for each serialized state-changing request", async () => {
+    let csrfRequests = 0;
+    const request = vi.fn(async (url) => {
+      if (url.endsWith("/api/auth/csrf")) {
+        csrfRequests += 1;
+        return { ok: true, json: async () => ({ token: `csrf-${csrfRequests}` }) };
+      }
+      return { ok: true, json: async () => ({}) };
+    });
+    vi.stubGlobal("fetch", request);
+    const { api } = await import("./api");
+
+    await api.requestPurchase(17);
+    await api.acceptListing(17);
+
+    const csrfCalls = request.mock.calls.filter(([url]) => url.endsWith("/api/auth/csrf"));
+    const mutations = request.mock.calls.filter(([url]) => !url.endsWith("/api/auth/csrf"));
+    expect(csrfCalls).toHaveLength(2);
+    expect(mutations[0][1].headers.get("X-XSRF-TOKEN")).toBe("csrf-1");
+    expect(mutations[1][1].headers.get("X-XSRF-TOKEN")).toBe("csrf-2");
+  });
+
   it("sends credentials on protected reads so the browser can attach its HttpOnly cookie", async () => {
     const request = vi.fn(async () => ({ ok: true, json: async () => [] }));
     vi.stubGlobal("fetch", request);

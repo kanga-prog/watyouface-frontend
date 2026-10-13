@@ -34,7 +34,11 @@ export default function Marketplace() {
           <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Marketplace communautaire</h1>
           <p className="text-sm text-[var(--color-text-secondary)]">Consultez les annonces et suivez le cycle de vente avec des crédits de démonstration.</p>
         </header>
-        <MarketplaceSidebar currentUser={currentUser} refreshUser={refreshUser} />
+        <MarketplaceSidebar
+          currentUser={currentUser}
+          refreshUser={refreshUser}
+          onOpenChat={(conversationId) => navigate("/messages", { state: { conversationId } })}
+        />
       </div>
     </main>
   );
