@@ -57,13 +57,13 @@ export default function CreateListingDialog({ open, onOpenChange, onCreated }) {
     const f = e.target.files?.[0];
     if (!f) return;
 
-    const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+    const allowedTypes = new Set(["image/jpeg", "image/png"]);
     if (!allowedTypes.has(f.type)) {
       if (preview) URL.revokeObjectURL(preview);
       setPreview(null);
       setFile(null);
       e.target.value = "";
-      setErr("Formats acceptés : JPEG, PNG ou WebP.");
+      setErr("Formats acceptés : JPEG et PNG.");
       return;
     }
     if (f.size > 10 * 1024 * 1024) {
@@ -71,7 +71,7 @@ export default function CreateListingDialog({ open, onOpenChange, onCreated }) {
       setPreview(null);
       setFile(null);
       e.target.value = "";
-      setErr("L’image ne doit pas dépasser 10 Mo.");
+      setErr("Image trop volumineuse : 10 Mo maximum.");
       return;
     }
 
@@ -189,7 +189,7 @@ export default function CreateListingDialog({ open, onOpenChange, onCreated }) {
 
               <div className="mt-3 space-y-2">
                 <Label>Image (upload)</Label>
-                <Input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFile} />
+                <Input type="file" accept="image/jpeg,image/png" onChange={handleFile} />
                 {file && <p className="text-xs text-gray-500 truncate">{file.name}</p>}
               </div>
             </div>

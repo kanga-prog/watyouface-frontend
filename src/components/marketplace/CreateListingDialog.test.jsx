@@ -46,7 +46,10 @@ describe('CreateListingDialog', () => {
     expect(await screen.findByText('Prix invalide')).toBeInTheDocument();
   });
 
-  it('uploads a supported image then saves its returned URL on the listing', async () => {
+  it.each([
+    ['JPEG', 'image/jpeg', 'console.jpg'],
+    ['PNG', 'image/png', 'console.png'],
+  ])('uploads a supported %s image then saves its returned URL on the listing', async (_format, type, name) => {
     vi.stubGlobal('URL', {
       createObjectURL: vi.fn(() => 'blob:listing-preview'),
       revokeObjectURL: vi.fn(),
@@ -56,7 +59,7 @@ describe('CreateListingDialog', () => {
     renderDialog();
     fireEvent.change(screen.getByPlaceholderText('Ex: PS5'), { target: { value: 'Console' } });
     fireEvent.change(screen.getByPlaceholderText('499'), { target: { value: '499' } });
-    const file = new File(['fake-png'], 'console.png', { type: 'image/png' });
+    const file = new File(['fake-image'], name, { type });
     fireEvent.change(document.querySelector('input[type="file"]'), { target: { files: [file] } });
     fireEvent.click(screen.getByRole('button', { name: 'Créer' }));
 
@@ -66,12 +69,44 @@ describe('CreateListingDialog', () => {
     }));
   });
 
-  it('rejects image formats that the backend does not accept', async () => {
+  it('limits the file selector to JPEG and PNG', () => {
     renderDialog();
-    const file = new File(['image'], 'animated.gif', { type: 'image/gif' });
+
+    expect(document.querySelector('input[type="file"]')).toHaveAttribute('accept', 'image/jpeg,image/png');
+  });
+
+  it('rejects WebP before calling the API', async () => {
+    renderDialog();
+    const file = new File(['image'], 'photo.webp', { type: 'image/webp' });
     fireEvent.change(document.querySelector('input[type="file"]'), { target: { files: [file] } });
 
-    expect(await screen.findByText('Formats acceptés : JPEG, PNG ou WebP.')).toBeInTheDocument();
+    expect(await screen.findByText('Formats acceptés : JPEG et PNG.')).toBeInTheDocument();
     expect(api.uploadMarketplaceImage).not.toHaveBeenCalled();
+  });
+
+  it('rejects images larger than 10 MB before calling the API', async () => {
+    renderDialog();
+    const file = new File([new Uint8Array(10 * 1024 * 1024 + 1)], 'large.png', { type: 'image/png' });
+    fireEvent.change(document.querySelector('input[type="file"]'), { target: { files: [file] } });
+
+    expect(await screen.findByText('Image trop volumineuse : 10 Mo maximum.')).toBeInTheDocument();
+    expect(api.uploadMarketplaceImage).not.toHaveBeenCalled();
+  });
+
+  it('displays the backend validation message when the upload is rejected', async () => {
+    vi.stubGlobal('URL', {
+      createObjectURL: vi.fn(() => 'blob:listing-preview'),
+      revokeObjectURL: vi.fn(),
+    });
+    api.uploadMarketplaceImage.mockRejectedValue(new Error('Image invalide ou format non lisible'));
+    renderDialog();
+    fireEvent.change(screen.getByPlaceholderText('Ex: PS5'), { target: { value: 'Console' } });
+    fireEvent.change(screen.getByPlaceholderText('499'), { target: { value: '499' } });
+    const file = new File(['fake-png'], 'console.png', { type: 'image/png' });
+    fireEvent.change(document.querySelector('input[type="file"]'), { target: { files: [file] } });
+    fireEvent.click(screen.getByRole('button', { name: 'Créer' }));
+
+    expect(await screen.findByText('Image invalide ou format non lisible')).toBeInTheDocument();
+    expect(api.createListing).not.toHaveBeenCalled();
   });
 });
