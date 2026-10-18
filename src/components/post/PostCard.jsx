@@ -59,9 +59,11 @@ export default function PostCard({ post, currentUser, onChanged }) {
 
         {(isOwner || isAdmin) && (
           <div className="ml-auto flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => setEditing(true)} aria-label="Modifier cette publication">
-              Modifier
-            </Button>
+            {isOwner && (
+              <Button size="sm" variant="outline" onClick={() => setEditing(true)} aria-label="Modifier cette publication">
+                Modifier
+              </Button>
+            )}
             <Button
               size="sm"
               variant="destructive"

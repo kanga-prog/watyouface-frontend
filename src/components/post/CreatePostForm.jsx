@@ -10,11 +10,27 @@ export default function CreatePostForm({ onPostCreated }) {
   const [preview, setPreview] = useState(null);
   const [fileType, setFileType] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
   const fileInputRef = useRef(null);
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
+
+    const allowedImages = new Set(["image/jpeg", "image/png", "image/gif", "image/bmp"]);
+    const allowedVideos = new Set(["video/mp4", "video/webm", "video/quicktime"]);
+    if (!allowedImages.has(selectedFile.type) && !allowedVideos.has(selectedFile.type)) {
+      setError("Formats acceptés : JPEG, PNG, GIF, BMP ou vidéo MP4/WebM/MOV.");
+      e.target.value = "";
+      return;
+    }
+    if ((allowedImages.has(selectedFile.type) && selectedFile.size > 10 * 1024 * 1024)
+      || (allowedVideos.has(selectedFile.type) && selectedFile.size > 200 * 1024 * 1024)) {
+      setError(allowedImages.has(selectedFile.type) ? "Image trop volumineuse : 10 Mo maximum." : "Vidéo trop volumineuse : 200 Mo maximum.");
+      e.target.value = "";
+      return;
+    }
+    setError("");
 
     const type =
       selectedFile.type.startsWith("image/") ? "image"
@@ -61,8 +77,8 @@ export default function CreatePostForm({ onPostCreated }) {
       const res = await api.createPost(formData);
 
       if (!res.ok) {
-        const error = await res.text();
-        alert("Échec de la publication : " + error);
+        const message = await api.errorMessage(res);
+        setError(message);
         return;
       }
 
@@ -70,7 +86,7 @@ export default function CreatePostForm({ onPostCreated }) {
       removeFile();
       if (onPostCreated) onPostCreated();
     } catch (err) {
-      alert("Erreur réseau : " + err.message);
+      setError(err?.message || "Erreur réseau lors de la publication.");
     } finally {
       setIsSubmitting(false);
     }
@@ -133,7 +149,7 @@ export default function CreatePostForm({ onPostCreated }) {
             type="file"
             ref={fileInputRef}
             onChange={handleFileChange}
-            accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+            accept="image/jpeg,image/png,image/gif,image/bmp,video/mp4,video/webm,video/quicktime"
             className="hidden"
           />
         </label>
@@ -142,6 +158,7 @@ export default function CreatePostForm({ onPostCreated }) {
           {isSubmitting ? "Publication..." : "Publier"}
         </Button>
       </div>
+      {error && <p role="alert" className="mt-2 text-sm text-red-700">{error}</p>}
     </form>
   );
 }

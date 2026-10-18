@@ -57,13 +57,13 @@ export default function CreateListingDialog({ open, onOpenChange, onCreated }) {
     const f = e.target.files?.[0];
     if (!f) return;
 
-    const allowedTypes = new Set(["image/jpeg", "image/png"]);
+    const allowedTypes = new Set(["image/jpeg", "image/png", "image/gif", "image/bmp"]);
     if (!allowedTypes.has(f.type)) {
       if (preview) URL.revokeObjectURL(preview);
       setPreview(null);
       setFile(null);
       e.target.value = "";
-      setErr("Formats acceptés : JPEG et PNG.");
+      setErr("Formats acceptés : JPEG, PNG, GIF et BMP.");
       return;
     }
     if (f.size > 10 * 1024 * 1024) {
@@ -189,7 +189,7 @@ export default function CreateListingDialog({ open, onOpenChange, onCreated }) {
 
               <div className="mt-3 space-y-2">
                 <Label>Image (upload)</Label>
-                <Input type="file" accept="image/jpeg,image/png" onChange={handleFile} />
+                <Input type="file" accept="image/jpeg,image/png,image/gif,image/bmp" onChange={handleFile} />
                 {file && <p className="text-xs text-gray-500 truncate">{file.name}</p>}
               </div>
             </div>

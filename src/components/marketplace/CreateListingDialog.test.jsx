@@ -49,6 +49,8 @@ describe('CreateListingDialog', () => {
   it.each([
     ['JPEG', 'image/jpeg', 'console.jpg'],
     ['PNG', 'image/png', 'console.png'],
+    ['GIF', 'image/gif', 'console.gif'],
+    ['BMP', 'image/bmp', 'console.bmp'],
   ])('uploads a supported %s image then saves its returned URL on the listing', async (_format, type, name) => {
     vi.stubGlobal('URL', {
       createObjectURL: vi.fn(() => 'blob:listing-preview'),
@@ -69,10 +71,10 @@ describe('CreateListingDialog', () => {
     }));
   });
 
-  it('limits the file selector to JPEG and PNG', () => {
+  it('limits the file selector to the backend image policy', () => {
     renderDialog();
 
-    expect(document.querySelector('input[type="file"]')).toHaveAttribute('accept', 'image/jpeg,image/png');
+    expect(document.querySelector('input[type="file"]')).toHaveAttribute('accept', 'image/jpeg,image/png,image/gif,image/bmp');
   });
 
   it('rejects WebP before calling the API', async () => {
@@ -80,7 +82,7 @@ describe('CreateListingDialog', () => {
     const file = new File(['image'], 'photo.webp', { type: 'image/webp' });
     fireEvent.change(document.querySelector('input[type="file"]'), { target: { files: [file] } });
 
-    expect(await screen.findByText('Formats acceptés : JPEG et PNG.')).toBeInTheDocument();
+    expect(await screen.findByText('Formats acceptés : JPEG, PNG, GIF et BMP.')).toBeInTheDocument();
     expect(api.uploadMarketplaceImage).not.toHaveBeenCalled();
   });
 

@@ -40,8 +40,17 @@ export default function EditListingDialog({ open, onOpenChange, listing, onSaved
   const handleFile = (e) => {
     const f = e.target.files?.[0];
     if (!f) return;
-    if (!f.type.startsWith("image/")) {
-      setErr("Image uniquement");
+    const allowedTypes = new Set(["image/jpeg", "image/png", "image/gif", "image/bmp"]);
+    if (!allowedTypes.has(f.type)) {
+      setErr("Formats acceptés : JPEG, PNG, GIF et BMP.");
+      setFile(null);
+      e.target.value = "";
+      return;
+    }
+    if (f.size > 10 * 1024 * 1024) {
+      setErr("Image trop volumineuse : 10 Mo maximum.");
+      setFile(null);
+      e.target.value = "";
       return;
     }
     setErr("");
@@ -128,7 +137,7 @@ export default function EditListingDialog({ open, onOpenChange, listing, onSaved
               </div>
               <div className="mt-3 space-y-2">
                 <Label>Image (upload)</Label>
-                <Input type="file" accept="image/*" onChange={handleFile} />
+                <Input type="file" accept="image/jpeg,image/png,image/gif,image/bmp" onChange={handleFile} />
               </div>
             </div>
 

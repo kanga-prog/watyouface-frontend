@@ -56,6 +56,14 @@ async function parseError(res) {
   return text || `HTTP ${res.status}`;
 }
 
+async function adminPage(resource, { query = "", page = 0, size = 20 } = {}) {
+  const qs = new URLSearchParams({ page: String(page), size: String(size) });
+  if (query) qs.set("query", query);
+  const res = await fetch(`${API_BASE}/api/admin/${resource}?${qs.toString()}`);
+  if (!res.ok) throw new Error(await parseError(res));
+  return res.json();
+}
+
 
 export const api = {
   // Compatibility for existing call sites; authentication is cookie-based, never a JS token header.
@@ -400,11 +408,15 @@ export const api = {
     return res.json();
   },
 
-  adminSetUserRole: async (userId, role) => {
-    const res = await fetch(`${API_BASE}/api/admin/users/${userId}/role`, {
-      method: "PUT",
+  adminGetPosts: (params = {}) => adminPage("posts", params),
+  adminGetComments: (params = {}) => adminPage("comments", params),
+  adminGetListings: (params = {}) => adminPage("listings", params),
+
+  adminCreditWallet: async (userId, amount) => {
+    const res = await fetch(`${API_BASE}/api/admin/users/${userId}/wallet/credit`, {
+      method: "POST",
       headers: api.jsonHeaders(),
-      body: JSON.stringify({ role }),
+      body: JSON.stringify({ amount }),
     });
     if (!res.ok) throw new Error(await parseError(res));
     return res.json();

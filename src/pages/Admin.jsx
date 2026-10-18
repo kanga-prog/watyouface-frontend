@@ -4,6 +4,7 @@ import { api } from "../utils/api";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
+import { mediaUrl } from "../utils/media";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -19,9 +20,12 @@ export default function Admin() {
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
 
-  const [deletePostId, setDeletePostId] = useState("");
-  const [deleteCommentId, setDeleteCommentId] = useState("");
-  const [deleteListingId, setDeleteListingId] = useState("");
+  const [posts, setPosts] = useState([]);
+  const [comments, setComments] = useState([]);
+  const [listings, setListings] = useState([]);
+  const [walletAmounts, setWalletAmounts] = useState({});
+  const [actionLoading, setActionLoading] = useState("");
+  const [success, setSuccess] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -73,26 +77,54 @@ export default function Admin() {
     setTotalElements(data?.totalElements ?? 0);
   };
 
-  const setRole = async (userId, nextRole) => {
-    await api.adminSetUserRole(userId, nextRole);
-    await refreshUsers();
+  const refreshModeration = async () => {
+    const [postPage, commentPage, listingPage] = await Promise.all([
+      api.adminGetPosts(), api.adminGetComments(), api.adminGetListings(),
+    ]);
+    setPosts(postPage.content || []);
+    setComments(commentPage.content || []);
+    setListings(listingPage.content || []);
   };
 
-  const del = async (kind) => {
-    if (kind === "post" && deletePostId) {
-      await api.adminDeletePost(deletePostId);
-      setDeletePostId("");
+  useEffect(() => {
+    if (!currentUser) return;
+    refreshModeration().catch((e) => setError(e?.message || "Erreur modération"));
+  }, [currentUser]);
+
+  const deleteContent = async (kind, id) => {
+    if (!window.confirm("Confirmer la suppression de cette donnée de test ou de ce contenu signalé ?")) return;
+    setActionLoading(`${kind}-${id}`);
+    setError("");
+    try {
+      const actions = { post: api.adminDeletePost, comment: api.adminDeleteComment, listing: api.adminDeleteListing };
+      await actions[kind](id);
+      setSuccess("Suppression effectuée.");
+      await refreshModeration();
+    } catch (e) {
+      setError(e?.message || "Suppression impossible");
+    } finally {
+      setActionLoading("");
+    }
+  };
+
+  const creditWallet = async (userId) => {
+    const amount = Number(walletAmounts[userId]);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setError("Le montant doit être strictement positif.");
       return;
     }
-    if (kind === "comment" && deleteCommentId) {
-      await api.adminDeleteComment(deleteCommentId);
-      setDeleteCommentId("");
-      return;
-    }
-    if (kind === "listing" && deleteListingId) {
-      await api.adminDeleteListing(deleteListingId);
-      setDeleteListingId("");
-      return;
+    if (!window.confirm(`Créditer ${amount} crédits de démonstration ?`)) return;
+    setActionLoading(`wallet-${userId}`);
+    setError("");
+    try {
+      await api.adminCreditWallet(userId, amount);
+      setSuccess("Wallet crédité.");
+      setWalletAmounts((current) => ({ ...current, [userId]: "" }));
+      await refreshUsers();
+    } catch (e) {
+      setError(e?.message || "Crédit impossible");
+    } finally {
+      setActionLoading("");
     }
   };
 
@@ -106,6 +138,7 @@ export default function Admin() {
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
+      {success && <p role="status" className="text-sm text-green-700">{success}</p>}
 
       <Card className="p-4">
         <h2 className="font-semibold mb-3">Utilisateurs</h2>
@@ -133,7 +166,8 @@ export default function Admin() {
                   <th>Username</th>
                   <th>Email</th>
                   <th>Role</th>
-                  <th className="text-right">Actions</th>
+                  <th>Contrat</th>
+                  <th>Wallet</th>
                 </tr>
               </thead>
               <tbody>
@@ -143,23 +177,11 @@ export default function Admin() {
                     <td>{u.username}</td>
                     <td className="text-gray-600">{u.email}</td>
                     <td className="font-mono">{u.role}</td>
-                    <td className="py-2 text-right space-x-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setRole(u.id, "USER")}
-                        disabled={u.role === "USER"}
-                      >
-                        USER
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setRole(u.id, "ADMIN")}
-                        disabled={u.role === "ADMIN"}
-                      >
-                        ADMIN
-                      </Button>
+                    <td>{u.acceptedContract ? "Accepté" : "En attente"}</td>
+                    <td className="py-2">
+                      <span className="mr-2">{u.walletBalance ?? 0}</span>
+                      <Input aria-label={`Montant wallet ${u.username}`} className="inline-flex w-24 mr-1" type="number" min="0.01" value={walletAmounts[u.id] || ""} onChange={(e) => setWalletAmounts((current) => ({ ...current, [u.id]: e.target.value }))} />
+                      <Button size="sm" onClick={() => creditWallet(u.id)} disabled={actionLoading === `wallet-${u.id}`}>Créditer</Button>
                     </td>
                   </tr>
                 ))}
@@ -195,35 +217,21 @@ export default function Admin() {
         )}
       </Card>
 
-      <Card className="p-4 space-y-4">
-        <h2 className="font-semibold">Modération rapide (suppression par ID)</h2>
-
-        <div className="grid md:grid-cols-3 gap-3">
-          <div className="space-y-2">
-            <p className="text-sm font-medium">Supprimer Post</p>
-            <div className="flex gap-2">
-              <Input value={deletePostId} onChange={(e) => setDeletePostId(e.target.value)} placeholder="postId" />
-              <Button onClick={() => del("post")} disabled={!deletePostId}>OK</Button>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <p className="text-sm font-medium">Supprimer Commentaire</p>
-            <div className="flex gap-2">
-              <Input value={deleteCommentId} onChange={(e) => setDeleteCommentId(e.target.value)} placeholder="commentId" />
-              <Button onClick={() => del("comment")} disabled={!deleteCommentId}>OK</Button>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <p className="text-sm font-medium">Supprimer Listing</p>
-            <div className="flex gap-2">
-              <Input value={deleteListingId} onChange={(e) => setDeleteListingId(e.target.value)} placeholder="listingId" />
-              <Button onClick={() => del("listing")} disabled={!deleteListingId}>OK</Button>
-            </div>
-          </div>
-        </div>
-      </Card>
+      <ModerationTable title="Posts" rows={posts} render={(post) => <><td>{post.id}</td><td>{post.authorUsername}<br /><span className="text-xs text-gray-500">{formatDate(post.createdAt)}</span></td><td className="max-w-md break-words">{post.content}<MediaPreview src={post.imageUrl} /></td><td><Button size="sm" variant="destructive" onClick={() => deleteContent("post", post.id)} disabled={actionLoading === `post-${post.id}`}>Supprimer</Button></td></>} />
+      <ModerationTable title="Commentaires" rows={comments} render={(comment) => <><td>{comment.id}</td><td>{comment.authorUsername}<br /><span className="text-xs text-gray-500">{formatDate(comment.createdAt)}</span></td><td className="max-w-md break-words">Post #{comment.postId} — {comment.postExcerpt}<br />{comment.content}</td><td><Button size="sm" variant="destructive" onClick={() => deleteContent("comment", comment.id)} disabled={actionLoading === `comment-${comment.id}`}>Supprimer</Button></td></>} />
+      <ModerationTable title="Marketplace" rows={listings} render={(listing) => <><td>{listing.id}</td><td>{listing.sellerUsername}<br /><span className="text-xs text-gray-500">{formatDate(listing.createdAt)}</span></td><td className="max-w-md break-words">{listing.title} — {listing.price} — {listing.hidden ? "MASQUÉE" : listing.status}<MediaPreview src={listing.image} /></td><td><Button size="sm" variant="destructive" onClick={() => deleteContent("listing", listing.id)} disabled={actionLoading === `listing-${listing.id}`}>{listing.hidden ? "Masquée" : "Supprimer"}</Button></td></>} />
     </div>
   );
+}
+
+function ModerationTable({ title, rows, render }) {
+  return <Card className="p-4 overflow-x-auto"><h2 className="font-semibold mb-3">{title}</h2><table className="w-full text-sm"><tbody>{rows.length ? rows.map((row) => <tr key={row.id} className="border-b"><>{render(row)}</></tr>) : <tr><td className="text-gray-500">Aucune donnée</td></tr>}</tbody></table></Card>;
+}
+
+function MediaPreview({ src }) {
+  return src ? <img className="mt-1 h-12 w-12 rounded object-cover" src={mediaUrl(src)} alt="Média du contenu" /> : null;
+}
+
+function formatDate(value) {
+  return value ? new Date(value).toLocaleString() : "Date inconnue";
 }
