@@ -29,7 +29,7 @@ describe("CreatePostForm image policy", () => {
       target: { files: [new File(["image"], name, { type })] },
     });
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-    expect(screen.getByAltText("preview")).toBeInTheDocument();
+    expect(screen.getByAltText("Aperçu du média image sélectionné")).toBeInTheDocument();
   });
 
   it("rejects WebP before a post request", () => {

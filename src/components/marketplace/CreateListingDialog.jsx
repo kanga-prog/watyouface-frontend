@@ -141,14 +141,15 @@ export default function CreateListingDialog({ open, onOpenChange, onCreated }) {
           </div>
 
           {err && (
-            <div className="text-sm border rounded-xl px-3 py-2 bg-red-50 border-red-200">
+            <div role="alert" className="text-sm border rounded-xl px-3 py-2 bg-red-50 border-red-200">
               {err}
             </div>
           )}
 
           <div className="space-y-2">
-            <Label>Titre</Label>
+            <Label htmlFor="listing-title">Titre</Label>
             <Input
+              id="listing-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Ex: PS5"
@@ -156,8 +157,9 @@ export default function CreateListingDialog({ open, onOpenChange, onCreated }) {
           </div>
 
           <div className="space-y-2">
-            <Label>Description</Label>
+            <Label htmlFor="listing-description">Description</Label>
             <Input
+              id="listing-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Ex: Neuve, garantie, livraison..."
@@ -165,8 +167,9 @@ export default function CreateListingDialog({ open, onOpenChange, onCreated }) {
           </div>
 
           <div className="space-y-2">
-            <Label>Prix (WUF)</Label>
+            <Label htmlFor="listing-price">Prix (WUF)</Label>
             <Input
+              id="listing-price"
               type="number"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
@@ -182,14 +185,14 @@ export default function CreateListingDialog({ open, onOpenChange, onCreated }) {
               <div className="w-full h-48 rounded-lg overflow-hidden bg-white border flex items-center justify-center">
                 <img
                   src={previewSrc}
-                  alt="preview"
+                  alt="Aperçu de l’image de l’annonce"
                   className={previewSrc === defaultAvatar ? "w-24 h-24 opacity-60" : "w-full h-full object-contain"}
                 />
               </div>
 
               <div className="mt-3 space-y-2">
-                <Label>Image (upload)</Label>
-                <Input type="file" accept="image/jpeg,image/png,image/gif,image/bmp" onChange={handleFile} />
+                <Label htmlFor="listing-image-file">Image (upload)</Label>
+                <Input id="listing-image-file" type="file" accept="image/jpeg,image/png,image/gif,image/bmp" onChange={handleFile} />
                 {file && <p className="text-xs text-gray-500 truncate">{file.name}</p>}
               </div>
             </div>
@@ -197,8 +200,9 @@ export default function CreateListingDialog({ open, onOpenChange, onCreated }) {
             {/* FIELDS */}
             <div className="space-y-3">
               <div className="space-y-2">
-                <Label>Image (URL ou /media/...)</Label>
+                <Label htmlFor="listing-image-url">Image (URL ou /media/...)</Label>
                 <Input
+                  id="listing-image-url"
                   value={image}
                   onChange={(e) => setImage(e.target.value)}
                   placeholder="/media/marketplace/x.png"

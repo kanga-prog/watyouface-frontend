@@ -137,7 +137,7 @@ export default function Admin() {
         </Button>
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
       {success && <p role="status" className="text-sm text-green-700">{success}</p>}
 
       <Card className="p-4">
@@ -145,6 +145,7 @@ export default function Admin() {
 
         <div className="flex flex-col md:flex-row gap-2 md:items-center md:justify-between mb-3">
           <Input
+            aria-label="Rechercher un utilisateur par pseudo ou adresse e-mail"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Recherche username / email"
@@ -225,7 +226,7 @@ export default function Admin() {
 }
 
 function ModerationTable({ title, rows, render }) {
-  return <Card className="p-4 overflow-x-auto"><h2 className="font-semibold mb-3">{title}</h2><table className="w-full text-sm"><tbody>{rows.length ? rows.map((row) => <tr key={row.id} className="border-b"><>{render(row)}</></tr>) : <tr><td className="text-gray-500">Aucune donnée</td></tr>}</tbody></table></Card>;
+  return <Card className="p-4 overflow-x-auto"><h2 className="font-semibold mb-3">{title}</h2><table className="w-full text-sm"><caption className="sr-only">Liste de modération : {title}</caption><thead><tr className="text-left border-b"><th scope="col" className="py-2">ID</th><th scope="col">Auteur et date</th><th scope="col">Contenu</th><th scope="col">Action</th></tr></thead><tbody>{rows.length ? rows.map((row) => <tr key={row.id} className="border-b"><>{render(row)}</></tr>) : <tr><td className="text-gray-500" colSpan="4">Aucune donnée</td></tr>}</tbody></table></Card>;
 }
 
 function MediaPreview({ src }) {

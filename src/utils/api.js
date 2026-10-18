@@ -382,16 +382,6 @@ export const api = {
       return res.json(); // { userId, balance }
     },
 
-  creditMyWallet: async (amount) => {
-    const res = await fetch(`${API_BASE}/api/wallet/me/credit`, {
-      method: "POST",
-      headers: api.jsonHeaders(),
-      body: JSON.stringify({ amount }),
-    });
-    if (!res.ok) throw new Error(await parseError(res));
-    return res.json(); // { userId, balance }
-  },
-
   // =========================
   // 🛡️ ADMIN
   // =========================

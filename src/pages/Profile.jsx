@@ -20,14 +20,9 @@ export default function Profile() {
 
   const [saving, setSaving] = useState(false);
 
-  // ==== WALLET ====
-  const [walletAmount, setWalletAmount] = useState("");
-  const [recharging, setRecharging] = useState(false);
-
   const navigate = useNavigate();
 
   const avatarSrc = (url) => (url ? mediaUrl(url) : defaultAvatar);
-  const isAdmin = (user?.role ?? "USER").toString().toUpperCase().replace(/^ROLE_/, "") === "ADMIN";
 
   /* ===== LOAD PROFILE ===== */
   useEffect(() => {
@@ -84,23 +79,6 @@ export default function Profile() {
     setDownloading(false);
   };
 
-  /* ===== WALLET ===== */
-  const handleRecharge = async () => {
-    if (!walletAmount || Number(walletAmount) <= 0) return;
-    setRecharging(true);
-    try {
-      await api.creditMyWallet(Number(walletAmount));
-      setWalletAmount("");
-      // reload user to update wallet balance (walletBalance renvoyé par /users/me)
-      const updatedUser = await api.getProfile();
-      setUser(updatedUser);
-    } catch {
-      alert("Erreur lors du crédit du wallet de démonstration.");
-    } finally {
-      setRecharging(false);
-    }
-  };
-
   if (!user) return null;
 
   return (
@@ -111,7 +89,7 @@ export default function Profile() {
         <section className="flex min-w-0 flex-col items-stretch gap-4 rounded bg-white p-4 shadow sm:flex-row sm:items-center sm:gap-6 sm:p-6">
           <div className="flex min-w-0 items-center gap-4">
             <Avatar className="h-20 w-20 shrink-0 ring-4 ring-blue-500/20 sm:h-24 sm:w-24">
-              <AvatarImage src={avatarSrc(user.avatarUrl)} />
+              <AvatarImage src={avatarSrc(user.avatarUrl)} alt={`Avatar de ${user.username}`} />
               <AvatarFallback>
                 {user.username?.[0]?.toUpperCase()}
               </AvatarFallback>
@@ -138,24 +116,7 @@ export default function Profile() {
             Solde : <span className="font-bold">{user.walletBalance ?? 0} crédits démo</span>
           </p>
 
-          {isAdmin ? (
-            <div className="mt-2 flex min-w-0 flex-col gap-2 sm:flex-row">
-              <label className="sr-only" htmlFor="wallet-credit">Montant de crédit démo</label>
-              <input
-                id="wallet-credit"
-                type="number"
-                placeholder="Montant à créditer"
-                className="min-w-0 flex-1 rounded border p-2"
-                value={walletAmount}
-                onChange={(e) => setWalletAmount(e.target.value)}
-              />
-              <Button onClick={handleRecharge} disabled={recharging}>
-                {recharging ? "Crédit en cours…" : "Créditer (admin)"}
-              </Button>
-            </div>
-          ) : (
-            <p className="text-sm text-gray-600">Le crédit de démonstration est réservé à l’administration.</p>
-          )}
+          <p className="text-sm text-gray-600">Le crédit de démonstration est réservé au tableau de bord d’administration.</p>
         </section>
 
         {/* ===== IDENTITÉ ===== */}
@@ -164,15 +125,17 @@ export default function Profile() {
 
           {editingUsername ? (
             <div className="flex min-w-0 flex-col gap-2 sm:flex-row">
+              <label className="sr-only" htmlFor="profile-username">Nouveau pseudo</label>
               <input
+                id="profile-username"
                 value={newUsername}
                 onChange={(e) => setNewUsername(e.target.value)}
                 className="min-w-0 rounded border px-2 py-1"
               />
-              <Button size="sm" onClick={handleUsernameUpdate} disabled={saving}>
+              <Button size="sm" onClick={handleUsernameUpdate} disabled={saving} aria-label="Enregistrer le nouveau pseudo">
                 💾
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => setEditingUsername(false)}>
+              <Button size="sm" variant="ghost" onClick={() => setEditingUsername(false)} aria-label="Annuler la modification du pseudo">
                 ❌
               </Button>
             </div>

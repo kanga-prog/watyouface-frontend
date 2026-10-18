@@ -104,25 +104,25 @@ export default function EditListingDialog({ open, onOpenChange, listing, onSaved
         <DialogDescription>Met à jour le titre, la description, le prix et l’image.</DialogDescription>
 
         {err && (
-          <div className="text-sm border rounded-xl px-3 py-2 bg-red-50 border-red-200">
+          <div role="alert" className="text-sm border rounded-xl px-3 py-2 bg-red-50 border-red-200">
             {err}
           </div>
         )}
 
         <div className="space-y-3">
           <div className="space-y-2">
-            <Label>Titre</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+            <Label htmlFor="edit-listing-title">Titre</Label>
+            <Input id="edit-listing-title" value={title} onChange={(e) => setTitle(e.target.value)} />
           </div>
 
           <div className="space-y-2">
-            <Label>Description</Label>
-            <Input value={description} onChange={(e) => setDescription(e.target.value)} />
+            <Label htmlFor="edit-listing-description">Description</Label>
+            <Input id="edit-listing-description" value={description} onChange={(e) => setDescription(e.target.value)} />
           </div>
 
           <div className="space-y-2">
-            <Label>Prix (WUF)</Label>
-            <Input type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
+            <Label htmlFor="edit-listing-price">Prix (WUF)</Label>
+            <Input id="edit-listing-price" type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -131,19 +131,20 @@ export default function EditListingDialog({ open, onOpenChange, listing, onSaved
               <div className="w-full h-48 rounded-lg overflow-hidden bg-white border flex items-center justify-center">
                 <img
                   src={previewSrc}
-                  alt="preview"
+                  alt="Aperçu de l’image de l’annonce"
                   className={previewSrc === defaultAvatar ? "w-24 h-24 opacity-60" : "w-full h-full object-contain"}
                 />
               </div>
               <div className="mt-3 space-y-2">
-                <Label>Image (upload)</Label>
-                <Input type="file" accept="image/jpeg,image/png,image/gif,image/bmp" onChange={handleFile} />
+                <Label htmlFor="edit-listing-image-file">Image (upload)</Label>
+                <Input id="edit-listing-image-file" type="file" accept="image/jpeg,image/png,image/gif,image/bmp" onChange={handleFile} />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Image (URL ou /media/...)</Label>
+              <Label htmlFor="edit-listing-image-url">Image (URL ou /media/...)</Label>
               <Input
+                id="edit-listing-image-url"
                 value={image}
                 onChange={(e) => setImage(e.target.value)}
                 placeholder="/media/marketplace/x.png"

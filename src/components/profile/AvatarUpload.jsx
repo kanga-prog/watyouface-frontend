@@ -93,7 +93,7 @@ export default function AvatarUpload({ onUpload, currentAvatarUrl }) {
       <div className="h-24 w-24 max-w-full overflow-hidden rounded-full border bg-gray-100 sm:h-32 sm:w-32">
         <img
           src={avatarSrc(preview)}
-          alt="avatar"
+          alt="Avatar actuel"
           className="w-full h-full object-cover"
           draggable={false}
         />
@@ -114,6 +114,7 @@ export default function AvatarUpload({ onUpload, currentAvatarUrl }) {
         type="file"
         accept="image/*"
         className="hidden"
+        aria-label="Choisir un nouvel avatar"
         onChange={handleFileChange}
       />
 

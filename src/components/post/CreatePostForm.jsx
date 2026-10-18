@@ -94,7 +94,9 @@ export default function CreatePostForm({ onPostCreated }) {
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-4 rounded-lg shadow mb-6">
+      <label className="sr-only" htmlFor="post-content">Contenu de la publication</label>
       <Textarea
+        id="post-content"
         placeholder="Quoi de neuf ?"
         value={content}
         onChange={(e) => setContent(e.target.value)}
@@ -107,7 +109,7 @@ export default function CreatePostForm({ onPostCreated }) {
             <div className="w-full overflow-hidden rounded-lg border">
               <img
                 src={preview || defaultAvatar}
-                alt="preview"
+                alt="Aperçu du média image sélectionné"
                 className="w-full max-h-64 object-contain"
               />
             </div>
@@ -134,6 +136,7 @@ export default function CreatePostForm({ onPostCreated }) {
           <Button
             type="button"
             onClick={removeFile}
+            aria-label="Retirer le fichier sélectionné"
             className="absolute -top-2 -right-2 rounded-full p-0.5 bg-red-500 text-white"
           >
             ✕
