@@ -218,6 +218,35 @@ export const api = {
     headers: api.jsonHeaders(),
     body: JSON.stringify({ username }),
   }),
+  changeOwnEmail: (payload) =>
+    fetch(`${API_BASE}/api/users/me/email`, {
+      method: "PATCH",
+      headers: api.jsonHeaders(),
+      body: JSON.stringify(payload),
+    }),
+  changeOwnPassword: (payload) =>
+    fetch(`${API_BASE}/api/users/me/password`, {
+      method: "PATCH",
+      headers: api.jsonHeaders(),
+      body: JSON.stringify(payload),
+    }),
+  requestStepUp: (action, currentPassword) =>
+    fetch(`${API_BASE}/api/users/me/step-up/request`, {
+      method: "POST",
+      headers: api.jsonHeaders(),
+      body: JSON.stringify({ action, currentPassword }),
+    }),
+  verifyStepUp: (action, code) =>
+    fetch(`${API_BASE}/api/users/me/step-up/verify`, {
+      method: "POST",
+      headers: api.jsonHeaders(),
+      body: JSON.stringify({ action, code }),
+    }),
+  deleteOwnAccount: (userId) =>
+    fetch(`${API_BASE}/api/users/${userId}`, {
+      method: "DELETE",
+    }),
+  exportMyData: () => fetch(`${API_BASE}/api/users/me/export`),
   getUsers: async () => {
   const res = await fetch(`${API_BASE}/api/users`, {
     headers: api.authHeader(),

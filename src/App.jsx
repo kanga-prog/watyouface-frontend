@@ -11,6 +11,8 @@ import Admin from "./pages/Admin";
 
 import Marketplace from "./pages/Marketplace";
 import Messages from "./pages/Messages";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 
 export default function App() {
   return (
@@ -29,6 +31,8 @@ export default function App() {
         {/* Pages publiques sans layout */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/legal/terms" element={<Terms />} />
+        <Route path="/legal/privacy" element={<Privacy />} />
 
         <Route path="*" element={<NotFound />} />
       </Routes>

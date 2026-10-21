@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
@@ -73,6 +73,16 @@ export default function RegisterForm() {
             12 caractères minimum.
           </span>
         </label>
+        <p className="text-sm leading-6 text-slate-700">
+          En continuant, vous reconnaissez avoir pris connaissance des{" "}
+          <Link className="font-medium text-blue-800 underline underline-offset-2" to="/legal/terms">
+            Conditions d’utilisation
+          </Link>{" "}
+          et de la{" "}
+          <Link className="font-medium text-blue-800 underline underline-offset-2" to="/legal/privacy">
+            Politique de confidentialité
+          </Link>.
+        </p>
         <Button type="submit" variant="default">
           Continuer
         </Button>

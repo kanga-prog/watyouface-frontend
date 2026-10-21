@@ -43,6 +43,17 @@ describe("registration flow", () => {
     expect(screen.getByPlaceholderText("Mot de passe")).toHaveAttribute("maxLength", "128");
   });
 
+  it("shows accessible links to the terms and privacy policy without optional consent checkbox", () => {
+    renderRegistrationFlow();
+    const terms = screen.getByRole("link", { name: "Conditions d’utilisation" });
+    const privacy = screen.getByRole("link", { name: "Politique de confidentialité" });
+    expect(terms).toHaveAttribute("href", "/legal/terms");
+    expect(privacy).toHaveAttribute("href", "/legal/privacy");
+    terms.focus();
+    expect(terms).toHaveFocus();
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+  });
+
   it("sends the DTO-compatible payload after the user accepts the contract", async () => {
     api.register.mockResolvedValue({ ok: true });
     renderRegistrationFlow();

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import { api } from "../utils/api";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
@@ -9,6 +9,8 @@ export default function LoginForm() {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
+  const [notice] = useState(location.state?.message || "");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -41,6 +43,7 @@ export default function LoginForm() {
     <Card className="p-8 max-w-md mx-auto mt-20">
       <h2 className="text-2xl font-semibold mb-6 text-center">Connexion</h2>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {notice && <p className="text-sm text-green-700" role="status">{notice}</p>}
         <Input
           type="email"
           name="email"
